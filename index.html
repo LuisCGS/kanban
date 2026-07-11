@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Meus Quadros — To Do · Doing · Done</title>
+<title>Meus Workspaces — Kanban</title>
 <style>
   :root{
     --bg:#EDF0F3;
@@ -81,22 +81,32 @@
     border-bottom:1px solid var(--line);
     position:sticky;top:0;z-index:40;
   }
-  .boards{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-  .board-select{
-    border:1px solid var(--line);border-radius:10px;
+  .picker-group{
+    display:flex;align-items:center;gap:5px;flex-wrap:wrap;
     background:var(--surface-2);
-    padding:8px 10px;font-size:14px;font-weight:700;
-    max-width:220px;outline:none;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:4px 6px;
   }
-  .board-select:focus{border-color:var(--accent)}
+  .picker-label{
+    font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--ink-faint);padding:0 2px 0 6px;
+  }
+  .picker-select{
+    border:none;border-radius:8px;
+    background:transparent;
+    padding:7px 4px;font-size:13.5px;font-weight:700;
+    max-width:170px;outline:none;cursor:pointer;
+  }
+  .picker-select:focus{background:var(--surface)}
   .board-tool{
-    width:34px;height:34px;border-radius:9px;
-    border:1px solid var(--line);background:var(--surface-2);
+    width:30px;height:30px;border-radius:8px;
+    border:none;background:transparent;
     display:flex;align-items:center;justify-content:center;
-    font-size:14px;transition:all .15s;flex:none;
+    font-size:13px;transition:all .15s;flex:none;color:var(--ink-soft);
   }
-  .board-tool:hover{border-color:var(--ink-faint)}
-  .board-tool.danger:hover{border-color:var(--danger-line);background:var(--danger-soft);color:var(--urgent)}
+  .board-tool:hover{background:var(--surface)}
+  .board-tool.danger:hover{background:var(--danger-soft);color:var(--urgent)}
   .save-status{
     font-size:10.5px;font-weight:700;letter-spacing:.03em;
     padding:3px 9px;border-radius:999px;
@@ -106,7 +116,7 @@
   .save-status.saving{background:var(--warn-soft);color:var(--warn)}
   .save-status.error{background:var(--danger-soft);color:var(--urgent)}
   .search{
-    flex:1;min-width:140px;max-width:300px;
+    flex:1;min-width:140px;max-width:280px;
     display:flex;align-items:center;gap:8px;
     background:var(--surface-2);
     border:1px solid var(--line);
@@ -131,6 +141,13 @@
     font-size:16px;transition:all .15s;flex:none;
   }
   .theme-btn:hover{border-color:var(--ink-faint)}
+  .single-tool{
+    width:38px;height:38px;border-radius:10px;
+    border:1px solid var(--line);background:var(--surface-2);
+    display:flex;align-items:center;justify-content:center;
+    font-size:15px;transition:all .15s;flex:none;
+  }
+  .single-tool:hover{border-color:var(--ink-faint)}
 
   /* ---------- Pomodoro ---------- */
   .pomo{
@@ -162,39 +179,72 @@
   .icon-btn.primary{background:var(--tomato);border-color:var(--tomato);color:#fff}
   .pomo-count{font-size:12px;color:var(--ink-soft);white-space:nowrap}
 
-  /* ---------- Board ---------- */
+  /* ---------- Board (colunas dinâmicas) ---------- */
   main{flex:1;overflow:auto;padding:18px 20px 30px}
   .board{
-    display:grid;grid-template-columns:repeat(3,minmax(270px,1fr));
-    gap:16px;max-width:1180px;margin:0 auto;
-    align-items:start;
+    display:flex;gap:16px;align-items:flex-start;
+    max-width:1400px;margin:0 auto;
+    overflow-x:auto;padding-bottom:8px;
   }
   .col{
     background:var(--surface-2);
     border:1px solid var(--line);
     border-radius:var(--radius);
     display:flex;flex-direction:column;
-    max-height:calc(100vh - 140px);
+    flex:0 0 300px;max-width:300px;
+    max-height:calc(100vh - 150px);
   }
-  .col-head{display:flex;align-items:center;gap:8px;padding:13px 14px 10px}
+  .col-head{display:flex;align-items:center;gap:8px;padding:13px 12px 10px;position:relative}
   .col-dot{width:9px;height:9px;border-radius:50%;flex:none}
-  .col[data-col="todo"] .col-dot{background:var(--ink-faint)}
-  .col[data-col="doing"] .col-dot{background:var(--warn)}
-  .col[data-col="done"] .col-dot{background:var(--ok)}
-  .col-head h2{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.07em}
+  .col-head h2{
+    font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px;
+  }
   .col-count{
     font-size:11.5px;font-weight:700;color:var(--ink-soft);
     background:var(--surface);border:1px solid var(--line);
-    border-radius:999px;padding:2px 8px;
+    border-radius:999px;padding:2px 8px;flex:none;
   }
-  .col-clear{margin-left:auto;font-size:11.5px;color:var(--ink-faint);padding:4px 6px;border-radius:6px}
+  .col-clear{font-size:11.5px;color:var(--ink-faint);padding:4px 6px;border-radius:6px;margin-left:auto}
   .col-clear:hover{color:var(--urgent);background:var(--surface)}
+  .col-menu-btn{
+    width:26px;height:26px;border-radius:7px;flex:none;
+    display:flex;align-items:center;justify-content:center;
+    color:var(--ink-faint);font-size:15px;margin-left:auto;
+  }
+  .col-clear + .col-menu-btn{margin-left:0}
+  .col-menu-btn:hover{background:var(--surface);color:var(--ink)}
+  .col-menu{
+    position:absolute;top:40px;right:8px;z-index:60;
+    background:var(--surface);border:1px solid var(--line);
+    border-radius:11px;box-shadow:var(--shadow-lift);
+    min-width:200px;overflow:hidden;padding:4px;
+  }
+  .col-menu button{
+    display:block;width:100%;text-align:left;
+    padding:9px 12px;font-size:13px;border-radius:8px;
+  }
+  .col-menu button:hover{background:var(--surface-2)}
+  .col-menu button.danger{color:var(--urgent)}
+  .col-menu button.danger:hover{background:var(--danger-soft)}
   .cards{
     flex:1;overflow-y:auto;
     display:flex;flex-direction:column;gap:9px;
     padding:4px 12px 10px;min-height:60px;
   }
   .col.dragover .cards{outline:2px dashed var(--accent);outline-offset:-4px;border-radius:10px;background:var(--accent-soft)}
+
+  .add-col{
+    flex:0 0 220px;
+    border:2px dashed var(--line);
+    border-radius:var(--radius);
+    padding:14px;
+    color:var(--ink-faint);
+    font-size:13px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    min-height:56px;transition:all .15s;
+  }
+  .add-col:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
 
   /* ---------- Card ---------- */
   .card{
@@ -240,7 +290,7 @@
   .add-card{margin:0 12px 12px;display:flex;gap:6px}
   .add-card input{
     flex:1;border:1px dashed var(--line);border-radius:9px;
-    background:transparent;padding:9px 11px;font-size:13px;outline:none;color:var(--ink);
+    background:transparent;padding:9px 11px;font-size:13px;outline:none;color:var(--ink);min-width:0;
   }
   .add-card input:focus{border-color:var(--accent);border-style:solid;background:var(--surface)}
   .add-card button{
@@ -314,8 +364,8 @@
   .btn.tomato{background:var(--tomato);border-color:var(--tomato);color:#fff}
   .btn.danger{color:var(--urgent)}
   .btn.danger:hover{background:var(--danger-soft);border-color:var(--danger-line)}
-  .move-group{display:flex;gap:6px;flex:1}
-  .move-group .btn{flex:1}
+  .move-group{display:flex;gap:6px;flex:1;flex-wrap:wrap}
+  .move-group .btn{flex:1;min-width:80px}
   .move-group .btn.here{background:var(--ink);border-color:var(--ink);color:var(--bg);pointer-events:none}
   .pomo-stat{font-size:12.5px;color:var(--ink-soft);margin-top:4px}
 
@@ -341,9 +391,12 @@
   @keyframes spin{to{transform:rotate(360deg)}}
 
   @media (max-width:860px){
-    .board{grid-template-columns:1fr;max-width:560px}
-    .col{max-height:none}
+    .board{flex-direction:column;overflow-x:visible;max-width:560px}
+    .col{flex:0 0 auto;max-width:none;width:100%;max-height:none}
+    .add-col{flex:0 0 auto;width:100%}
     header{padding:12px 14px;gap:10px}
+    .picker-group{width:100%;justify-content:flex-start}
+    .picker-select{max-width:none;flex:1}
     .pomo{margin-left:0;width:100%;justify-content:space-between}
     main{padding:14px 14px 28px}
   }
@@ -352,15 +405,25 @@
 <body>
 
 <header>
-  <div class="boards">
-    <select class="board-select" id="boardSelect" aria-label="Escolher quadro"></select>
+  <div class="picker-group" aria-label="Workspace">
+    <span class="picker-label">🗂 Workspace</span>
+    <select class="picker-select" id="wsSelect" aria-label="Escolher workspace"></select>
+    <button class="board-tool" id="wsNew" title="Novo workspace" aria-label="Criar novo workspace">＋</button>
+    <button class="board-tool" id="wsRename" title="Renomear workspace" aria-label="Renomear workspace">✏️</button>
+    <button class="board-tool danger" id="wsDelete" title="Excluir workspace" aria-label="Excluir workspace">🗑</button>
+  </div>
+
+  <div class="picker-group" aria-label="Quadro">
+    <span class="picker-label">📋 Quadro</span>
+    <select class="picker-select" id="boardSelect" aria-label="Escolher quadro"></select>
     <button class="board-tool" id="boardNew" title="Novo quadro" aria-label="Criar novo quadro">＋</button>
     <button class="board-tool" id="boardRename" title="Renomear quadro" aria-label="Renomear quadro">✏️</button>
     <button class="board-tool danger" id="boardDelete" title="Excluir quadro" aria-label="Excluir quadro">🗑</button>
-    <button class="board-tool" id="backupOpen" title="Backup: exportar/importar" aria-label="Backup: exportar ou importar dados">💾</button>
-    <span class="save-status" id="saveStatus">Salvo ✓</span>
-    <span class="save-status" id="syncStatus" style="display:none">Nuvem ✓</span>
   </div>
+
+  <button class="single-tool" id="backupOpen" title="Backup e sincronização" aria-label="Backup e sincronização">💾</button>
+  <span class="save-status" id="saveStatus">Salvo ✓</span>
+  <span class="save-status" id="syncStatus" style="display:none">Nuvem ✓</span>
 
   <div class="search" role="search">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
@@ -402,46 +465,8 @@
 </header>
 
 <main>
-  <div class="loading" id="loading"><div class="spin"></div> Carregando seus quadros...</div>
-
-  <div class="board" id="board" style="display:none">
-    <section class="col" data-col="todo">
-      <div class="col-head">
-        <span class="col-dot"></span><h2>To do</h2>
-        <span class="col-count" id="count-todo">0</span>
-      </div>
-      <div class="cards" id="cards-todo"></div>
-      <div class="add-card">
-        <input type="text" id="add-todo" placeholder="Nova tarefa..." aria-label="Nova tarefa em To do">
-        <button data-add="todo" aria-label="Adicionar em To do">+</button>
-      </div>
-    </section>
-
-    <section class="col" data-col="doing">
-      <div class="col-head">
-        <span class="col-dot"></span><h2>Doing</h2>
-        <span class="col-count" id="count-doing">0</span>
-      </div>
-      <div class="cards" id="cards-doing"></div>
-      <div class="add-card">
-        <input type="text" id="add-doing" placeholder="Nova tarefa..." aria-label="Nova tarefa em Doing">
-        <button data-add="doing" aria-label="Adicionar em Doing">+</button>
-      </div>
-    </section>
-
-    <section class="col" data-col="done">
-      <div class="col-head">
-        <span class="col-dot"></span><h2>Done</h2>
-        <span class="col-count" id="count-done">0</span>
-        <button class="col-clear" id="clearDone">Limpar</button>
-      </div>
-      <div class="cards" id="cards-done"></div>
-      <div class="add-card">
-        <input type="text" id="add-done" placeholder="Nova tarefa..." aria-label="Nova tarefa em Done">
-        <button data-add="done" aria-label="Adicionar em Done">+</button>
-      </div>
-    </section>
-  </div>
+  <div class="loading" id="loading"><div class="spin"></div> Carregando seus workspaces...</div>
+  <div class="board" id="board" style="display:none"></div>
 </main>
 
 <!-- Modal de detalhes -->
@@ -493,11 +518,7 @@
 
     <div class="field">
       <label>Mover para</label>
-      <div class="move-group" id="mMove">
-        <button class="btn" data-move="todo">To do</button>
-        <button class="btn" data-move="doing">Doing</button>
-        <button class="btn" data-move="done">Done</button>
-      </div>
+      <div class="move-group" id="mMove"></div>
     </div>
 
     <div class="pomo-stat" id="mPomoStat"></div>
@@ -509,11 +530,11 @@
   </div>
 </div>
 
-<!-- Modal de backup -->
+<!-- Modal de backup e sync -->
 <div class="overlay" id="backupOverlay">
-  <div class="modal" role="dialog" aria-modal="true" aria-label="Backup dos seus quadros">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Backup e sincronização">
     <div class="modal-top">
-      <span class="modal-title" style="cursor:default">💾 Backup dos seus quadros</span>
+      <span class="modal-title" style="cursor:default">💾 Backup &amp; Sincronização</span>
       <button class="modal-close" id="backupClose" aria-label="Fechar">✕</button>
     </div>
 
@@ -538,7 +559,7 @@
     <div class="field">
       <label>Exportar (levar para outro dispositivo)</label>
       <p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:8px">
-        Gera um arquivo com todos os seus quadros, tarefas e preferências.
+        Gera um arquivo com todos os seus workspaces, quadros, tarefas e preferências.
       </p>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn" id="exportFile">⬇️ Baixar arquivo .json</button>
@@ -551,13 +572,13 @@
       <label>Importar (restaurar neste dispositivo)</label>
       <p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:8px">
         Escolha o arquivo exportado ou cole o código abaixo.
-        A importação <strong>substitui</strong> os quadros atuais deste dispositivo.
+        A importação <strong>substitui</strong> os dados atuais deste dispositivo.
       </p>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
         <button class="btn" id="importFileBtn">📂 Escolher arquivo .json</button>
         <input type="file" id="importFileInput" accept=".json,application/json" style="display:none">
       </div>
-      <textarea id="importArea" placeholder='Ou cole aqui o código do backup (começa com {"boards":...)' style="margin-top:8px;min-height:70px;font-size:11px" aria-label="Colar código de backup"></textarea>
+      <textarea id="importArea" placeholder='Ou cole aqui o código do backup' style="margin-top:8px;min-height:70px;font-size:11px" aria-label="Colar código de backup"></textarea>
       <div style="display:flex;gap:8px;margin-top:8px">
         <button class="btn tomato" id="importPasteBtn">Importar código colado</button>
       </div>
@@ -568,12 +589,10 @@
 <div class="toast" id="toast"></div>
 
 <script>
-/* =============== Armazenamento híbrido ===============
-   1) window.storage (quando aberto dentro do Claude)
-   2) localStorage do navegador (quando aberto como arquivo/site)
-   3) memória (último recurso — avisa que não salva)          */
+/* =============== Armazenamento híbrido =============== */
 const STORAGE_KEY = 'kanban-v2';
 const LEGACY_KEY = 'kanban-board-v1';
+const MAX_COLS = 8;
 
 const store = (function(){
   if(window.storage && typeof window.storage.set === 'function'){
@@ -593,19 +612,31 @@ const store = (function(){
     };
   }catch(e){}
   const mem = {};
-  return {
-    type:'memory',
-    async get(k){ return mem[k] ?? null; },
-    async set(k,v){ mem[k]=v; }
-  };
+  return { type:'memory', async get(k){ return mem[k] ?? null; }, async set(k,v){ mem[k]=v; } };
 })();
 
 /* =============== Estado =============== */
 const LABEL_COLORS = ['#155E63','#7C4DBE','#B23A6F','#2F6FB2','#C77700','#2E8B57','#8A5A2B','#546170'];
+const COL_DOTS = ['#93A1AF','#C77700','#2E8B57','#2F6FB2','#7C4DBE','#B23A6F','#8A5A2B','#546170'];
+
+function defaultColumns(){
+  return [
+    {id:'todo',  name:'To do',  done:false},
+    {id:'doing', name:'Doing',  done:false},
+    {id:'done',  name:'Done',   done:true},
+  ];
+}
+function newBoard(name){
+  return { id:uid(), name:name||'Novo quadro', columns:defaultColumns(), cards:[] };
+}
+function newWorkspace(name, boards){
+  const bs = boards && boards.length ? boards : [newBoard('Meu Quadro')];
+  return { id:uid(), name:name||'Workspace', boards:bs, activeBoardId:bs[0].id };
+}
 
 let state = {
-  boards: [],            // {id, name, cards:[]}
-  activeBoardId: null,
+  workspaces: [],        // {id, name, boards:[{id,name,columns,cards}], activeBoardId}
+  activeWorkspaceId: null,
   pomosToday: 0,
   pomosDate: todayStr(),
   theme: 'light',
@@ -617,15 +648,63 @@ let filters = { search:'', priorities:new Set() };
 let openCardId = null;
 let saveTimer = null;
 let dirty = false;
+let openColMenu = null;
 
 function todayStr(){ return new Date().toISOString().slice(0,10); }
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 function esc(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
 
-function activeBoard(){
-  return state.boards.find(b=>b.id===state.activeBoardId) || state.boards[0];
+function activeWorkspace(){
+  return state.workspaces.find(w=>w.id===state.activeWorkspaceId) || state.workspaces[0];
 }
-function cards(){ return activeBoard() ? activeBoard().cards : []; }
+function boardsList(){ const w = activeWorkspace(); return w ? w.boards : []; }
+function activeBoard(){
+  const w = activeWorkspace(); if(!w) return null;
+  return w.boards.find(b=>b.id===w.activeBoardId) || w.boards[0];
+}
+function cards(){ const b = activeBoard(); return b ? b.cards : []; }
+function columns(){ const b = activeBoard(); return b ? b.columns : []; }
+function colById(id){ return columns().find(c=>c.id===id); }
+function doneColIds(){ return columns().filter(c=>c.done).map(c=>c.id); }
+
+/* Migração/normalização: aceita dados de todas as versões anteriores
+   (v1: cards soltos | v2: boards soltos | v3: boards com colunas | v4: workspaces) */
+function normalizeState(s){
+  if(!s || typeof s!=='object') return s;
+
+  /* v2/v3 → v4: embrulha boards em um workspace */
+  if(!Array.isArray(s.workspaces) || !s.workspaces.length){
+    if(Array.isArray(s.boards) && s.boards.length){
+      const ws = { id:uid(), name:'Geral', boards:s.boards, activeBoardId:s.activeBoardId||null };
+      s.workspaces = [ws];
+      s.activeWorkspaceId = ws.id;
+    } else {
+      s.workspaces = [];
+    }
+  }
+  delete s.boards; delete s.activeBoardId;
+
+  s.workspaces.forEach(w=>{
+    w.id = String(w.id||uid());
+    w.name = String(w.name||'Workspace').slice(0,40);
+    if(!Array.isArray(w.boards) || !w.boards.length) w.boards = [newBoard('Meu Quadro')];
+    w.boards.forEach(b=>{
+      b.id = String(b.id||uid());
+      b.name = String(b.name||'Quadro').slice(0,40);
+      if(!Array.isArray(b.cards)) b.cards = [];
+      if(!Array.isArray(b.columns) || !b.columns.length) b.columns = defaultColumns();
+      b.columns = b.columns.slice(0,MAX_COLS).map(c=>({
+        id:String(c.id||uid()),
+        name:String(c.name||'Coluna').slice(0,30),
+        done:!!c.done,
+      }));
+      const ids = b.columns.map(c=>c.id);
+      b.cards.forEach(card=>{ if(!ids.includes(card.col)) card.col = ids[0]; });
+    });
+    if(!w.boards.find(b=>b.id===w.activeBoardId)) w.activeBoardId = w.boards[0].id;
+  });
+  return s;
+}
 
 /* =============== Tema =============== */
 function applyTheme(){
@@ -654,13 +733,13 @@ async function load(){
     if(raw){
       state = Object.assign(state, JSON.parse(raw));
     } else {
-      /* migra dados da versão anterior (quadro único) */
       const legacy = await store.get(LEGACY_KEY);
       if(legacy){
         const old = JSON.parse(legacy);
-        const b = { id:uid(), name:'Meu Quadro', cards: old.cards||[] };
-        state.boards = [b];
-        state.activeBoardId = b.id;
+        const b = newBoard('Meu Quadro');
+        b.cards = old.cards||[];
+        state.workspaces = [newWorkspace('Geral',[b])];
+        state.activeWorkspaceId = state.workspaces[0].id;
         state.pomosToday = old.pomosToday||0;
         state.pomosDate = old.pomosDate||todayStr();
         state.theme = old.theme||'light';
@@ -669,20 +748,21 @@ async function load(){
     }
   }catch(e){ /* primeira visita */ }
 
-  if(!state.boards.length){
-    const b = { id:uid(), name:'Meu Quadro', cards:[] };
-    state.boards = [b];
-    state.activeBoardId = b.id;
+  normalizeState(state);
+  if(!state.workspaces.length){
+    const ws = newWorkspace('Pessoal');
+    state.workspaces = [ws];
+    state.activeWorkspaceId = ws.id;
   }
-  if(!state.boards.find(b=>b.id===state.activeBoardId)){
-    state.activeBoardId = state.boards[0].id;
+  if(!state.workspaces.find(w=>w.id===state.activeWorkspaceId)){
+    state.activeWorkspaceId = state.workspaces[0].id;
   }
   if(state.pomosDate !== todayStr()){ state.pomosToday = 0; state.pomosDate = todayStr(); }
 
   applyTheme();
   document.getElementById('loading').style.display='none';
-  document.getElementById('board').style.display='grid';
-  renderBoardSelect(); render(); renderPomo();
+  document.getElementById('board').style.display='flex';
+  renderPickers(); render(); renderPomo();
   syncUiRefresh();
   if(state.syncUrl) syncPull(false);
 }
@@ -722,42 +802,88 @@ window.addEventListener('pagehide', ()=>{
   if(dirty){ clearTimeout(saveTimer); save(); }
 });
 
-/* =============== Gestão de quadros =============== */
+/* =============== Workspaces e Quadros =============== */
+const wsSelect = document.getElementById('wsSelect');
 const boardSelect = document.getElementById('boardSelect');
 
-function renderBoardSelect(){
-  boardSelect.innerHTML = state.boards.map(b=>
-    `<option value="${b.id}" ${b.id===state.activeBoardId?'selected':''}>${esc(b.name)}</option>`
+function renderPickers(){
+  wsSelect.innerHTML = state.workspaces.map(w=>
+    `<option value="${w.id}" ${w.id===state.activeWorkspaceId?'selected':''}>${esc(w.name)}</option>`
+  ).join('');
+  const w = activeWorkspace();
+  boardSelect.innerHTML = (w?w.boards:[]).map(b=>
+    `<option value="${b.id}" ${b.id===w.activeBoardId?'selected':''}>${esc(b.name)}</option>`
   ).join('');
 }
+
+wsSelect.addEventListener('change', ()=>{
+  state.activeWorkspaceId = wsSelect.value;
+  filters.search=''; document.getElementById('searchInput').value='';
+  renderPickers(); render(); markDirty();
+});
 boardSelect.addEventListener('change', ()=>{
-  state.activeBoardId = boardSelect.value;
+  const w = activeWorkspace(); if(!w) return;
+  w.activeBoardId = boardSelect.value;
   filters.search=''; document.getElementById('searchInput').value='';
   render(); markDirty();
 });
 
-document.getElementById('boardNew').addEventListener('click', ()=>{
-  const name = prompt('Nome do novo quadro:', 'Novo quadro');
+/* --- workspaces --- */
+document.getElementById('wsNew').addEventListener('click', ()=>{
+  const name = prompt('Nome do novo workspace (ex.: Trabalho, Vida Pessoal):', '');
   if(name===null) return;
-  const b = { id:uid(), name:(name.trim()||'Novo quadro'), cards:[] };
-  state.boards.push(b);
-  state.activeBoardId = b.id;
-  renderBoardSelect(); render(); markDirty();
-  toast('Quadro "'+b.name+'" criado');
+  const ws = newWorkspace(name.trim()||'Novo workspace');
+  state.workspaces.push(ws);
+  state.activeWorkspaceId = ws.id;
+  renderPickers(); render(); markDirty();
+  toast('Workspace "'+ws.name+'" criado');
+});
+document.getElementById('wsRename').addEventListener('click', ()=>{
+  const w = activeWorkspace(); if(!w) return;
+  const name = prompt('Renomear workspace:', w.name);
+  if(name===null) return;
+  w.name = (name.trim()||w.name).slice(0,40);
+  renderPickers(); markDirty();
+});
+document.getElementById('wsDelete').addEventListener('click', ()=>{
+  const w = activeWorkspace(); if(!w) return;
+  if(state.workspaces.length===1){
+    toast('Este é seu único workspace — crie outro antes de excluir este.');
+    return;
+  }
+  const nBoards = w.boards.length;
+  const nCards = w.boards.reduce((s,b)=>s+b.cards.length,0);
+  if(confirm(`Excluir o workspace "${w.name}" com ${nBoards} quadro(s) e ${nCards} tarefa(s)? Essa ação não pode ser desfeita.`)){
+    state.workspaces = state.workspaces.filter(x=>x.id!==w.id);
+    state.activeWorkspaceId = state.workspaces[0].id;
+    renderPickers(); render(); markDirty();
+    toast('Workspace excluído');
+  }
 });
 
+/* --- quadros --- */
+document.getElementById('boardNew').addEventListener('click', ()=>{
+  const w = activeWorkspace(); if(!w) return;
+  const name = prompt('Nome do novo quadro:', 'Novo quadro');
+  if(name===null) return;
+  const b = newBoard(name.trim()||'Novo quadro');
+  w.boards.push(b);
+  w.activeBoardId = b.id;
+  renderPickers(); render(); markDirty();
+  toast('Quadro "'+b.name+'" criado');
+});
 document.getElementById('boardRename').addEventListener('click', ()=>{
   const b = activeBoard(); if(!b) return;
   const name = prompt('Renomear quadro:', b.name);
   if(name===null) return;
-  b.name = name.trim()||b.name;
-  renderBoardSelect(); markDirty();
+  b.name = (name.trim()||b.name).slice(0,40);
+  renderPickers(); markDirty();
 });
-
 document.getElementById('boardDelete').addEventListener('click', ()=>{
-  const b = activeBoard(); if(!b) return;
-  if(state.boards.length===1){
-    toast('Este é seu único quadro — crie outro antes de excluir este.');
+  const w = activeWorkspace();
+  const b = activeBoard(); if(!w || !b) return;
+  if(w.boards.length===1){
+    toast('Este é o único quadro do workspace — crie outro antes de excluir este.');
     return;
   }
   const n = b.cards.length;
@@ -765,9 +891,9 @@ document.getElementById('boardDelete').addEventListener('click', ()=>{
     ? `Excluir o quadro "${b.name}" e suas ${n} tarefa(s)? Essa ação não pode ser desfeita.`
     : `Excluir o quadro "${b.name}"? Essa ação não pode ser desfeita.`;
   if(confirm(msg)){
-    state.boards = state.boards.filter(x=>x.id!==b.id);
-    state.activeBoardId = state.boards[0].id;
-    renderBoardSelect(); render(); markDirty();
+    w.boards = w.boards.filter(x=>x.id!==b.id);
+    w.activeBoardId = w.boards[0].id;
+    renderPickers(); render(); markDirty();
     toast('Quadro excluído');
   }
 });
@@ -776,7 +902,7 @@ document.getElementById('boardDelete').addEventListener('click', ()=>{
 const POMO = { focus:25*60, short:5*60, long:15*60 };
 let pomo = { mode:'focus', remaining:POMO.focus, running:false, cardId:null, cycle:0, tick:null };
 
-/* =============== Render do quadro =============== */
+/* =============== Render do quadro (colunas dinâmicas) =============== */
 function cardMatches(c){
   if(filters.priorities.size && !filters.priorities.has(c.priority)) return false;
   if(filters.search){
@@ -800,27 +926,187 @@ function dueInfo(due){
 }
 
 function render(){
-  ['todo','doing','done'].forEach(col=>{
-    const wrap = document.getElementById('cards-'+col);
-    wrap.innerHTML='';
-    const colCards = cards().filter(c=>c.col===col);
-    document.getElementById('count-'+col).textContent = colCards.length;
+  closeColMenu();
+  const boardEl = document.getElementById('board');
+  boardEl.innerHTML = '';
+  const cols = columns();
+
+  cols.forEach((colDef, idx)=>{
+    const section = document.createElement('section');
+    section.className = 'col';
+    section.dataset.col = colDef.id;
+
+    const dotColor = colDef.done ? 'var(--ok)' : COL_DOTS[idx % COL_DOTS.length];
+    const colCards = cards().filter(c=>c.col===colDef.id);
     const visible = colCards.filter(cardMatches);
+
+    const head = document.createElement('div');
+    head.className = 'col-head';
+    head.innerHTML = `
+      <span class="col-dot" style="background:${dotColor}"></span>
+      <h2 title="${esc(colDef.name)}">${esc(colDef.name)}</h2>
+      <span class="col-count">${colCards.length}</span>
+      ${colDef.done ? '<button class="col-clear" data-clear="'+colDef.id+'">Limpar</button>' : ''}
+      <button class="col-menu-btn" data-menu="${colDef.id}" aria-label="Opções da coluna" title="Opções da coluna">⋯</button>
+    `;
+    section.appendChild(head);
+
+    const cardsWrap = document.createElement('div');
+    cardsWrap.className = 'cards';
     if(!visible.length){
       const msg = colCards.length ? 'Nenhuma tarefa corresponde ao filtro.'
-        : (col==='todo' ? 'Adicione sua primeira tarefa abaixo.'
-          : col==='doing' ? 'Arraste para cá o que está em andamento.'
-          : 'As conquistas aparecem aqui. 🎉');
-      wrap.innerHTML = '<div class="empty">'+msg+'</div>';
-      return;
+        : (colDef.done ? 'As conquistas aparecem aqui. 🎉' : (idx===0 ? 'Adicione sua primeira tarefa abaixo.' : 'Arraste tarefas para cá.'));
+      cardsWrap.innerHTML = '<div class="empty">'+msg+'</div>';
+    } else {
+      visible.forEach(c=> cardsWrap.appendChild(cardEl(c, colDef)) );
     }
-    visible.forEach(c=> wrap.appendChild(cardEl(c)) );
+    section.appendChild(cardsWrap);
+
+    const addWrap = document.createElement('div');
+    addWrap.className = 'add-card';
+    addWrap.innerHTML = `
+      <input type="text" data-addinput="${colDef.id}" placeholder="Nova tarefa..." aria-label="Nova tarefa em ${esc(colDef.name)}">
+      <button data-add="${colDef.id}" aria-label="Adicionar em ${esc(colDef.name)}">+</button>
+    `;
+    section.appendChild(addWrap);
+
+    section.addEventListener('dragover', e=>{ e.preventDefault(); section.classList.add('dragover'); });
+    section.addEventListener('dragleave', e=>{ if(!section.contains(e.relatedTarget)) section.classList.remove('dragover'); });
+    section.addEventListener('drop', e=>{
+      e.preventDefault(); section.classList.remove('dragover');
+      const id = e.dataTransfer.getData('text/plain');
+      moveCard(id, colDef.id);
+    });
+
+    boardEl.appendChild(section);
   });
+
+  if(cols.length < MAX_COLS){
+    const addCol = document.createElement('button');
+    addCol.className = 'add-col';
+    addCol.innerHTML = '＋ Nova coluna';
+    addCol.addEventListener('click', ()=>{
+      const name = prompt('Nome da nova coluna:', '');
+      if(name===null) return;
+      const b = activeBoard();
+      b.columns.push({id:uid(), name:(name.trim()||'Nova coluna').slice(0,30), done:false});
+      render(); markDirty();
+    });
+    boardEl.appendChild(addCol);
+  }
 }
 
-function cardEl(c){
+document.getElementById('board').addEventListener('click', e=>{
+  const addBtn = e.target.closest('[data-add]');
+  if(addBtn){ addFrom(addBtn.dataset.add); return; }
+  const clearBtn = e.target.closest('[data-clear]');
+  if(clearBtn){ clearColumn(clearBtn.dataset.clear); return; }
+  const menuBtn = e.target.closest('[data-menu]');
+  if(menuBtn){ toggleColMenu(menuBtn); return; }
+});
+document.getElementById('board').addEventListener('keydown', e=>{
+  const input = e.target.closest('[data-addinput]');
+  if(input && e.key==='Enter') addFrom(input.dataset.addinput);
+});
+
+function addFrom(colId){
+  const b = activeBoard(); if(!b) return;
+  const input = document.querySelector(`[data-addinput="${colId}"]`);
+  if(!input) return;
+  const title = input.value.trim();
+  if(!title) return;
+  b.cards.unshift({
+    id:uid(), title, desc:'', col:colId, priority:'normal', due:'',
+    labels:[], subtasks:[], pomos:0, createdAt:Date.now()
+  });
+  input.value='';
+  render(); markDirty();
+  const again = document.querySelector(`[data-addinput="${colId}"]`);
+  if(again) again.focus();
+}
+
+function clearColumn(colId){
+  const b = activeBoard(); if(!b) return;
+  const n = b.cards.filter(c=>c.col===colId).length;
+  if(!n) return;
+  if(confirm(`Excluir as ${n} tarefa(s) desta coluna? Essa ação não pode ser desfeita.`)){
+    b.cards = b.cards.filter(c=>c.col!==colId);
+    render(); markDirty();
+  }
+}
+
+/* ---- menu da coluna ---- */
+function closeColMenu(){
+  if(openColMenu){ openColMenu.remove(); openColMenu=null; }
+}
+document.addEventListener('click', e=>{
+  if(openColMenu && !e.target.closest('.col-menu') && !e.target.closest('[data-menu]')) closeColMenu();
+});
+
+function toggleColMenu(btn){
+  const colId = btn.dataset.menu;
+  if(openColMenu && openColMenu.dataset.for===colId){ closeColMenu(); return; }
+  closeColMenu();
+  const colDef = colById(colId); if(!colDef) return;
+  const menu = document.createElement('div');
+  menu.className = 'col-menu';
+  menu.dataset.for = colId;
+  menu.innerHTML = `
+    <button data-act="rename">✏️ Renomear coluna</button>
+    <button data-act="toggleDone">${colDef.done ? '⭕ Deixar de ser conclusão' : '✅ Marcar como conclusão'}</button>
+    <button data-act="delete" class="danger">🗑 Excluir coluna</button>
+  `;
+  menu.addEventListener('click', e=>{
+    const act = e.target.closest('[data-act]');
+    if(!act) return;
+    handleColAction(colId, act.dataset.act);
+  });
+  btn.closest('.col-head').appendChild(menu);
+  openColMenu = menu;
+}
+
+function handleColAction(colId, act){
+  const b = activeBoard();
+  const colDef = colById(colId);
+  if(!b || !colDef) return;
+  closeColMenu();
+
+  if(act==='rename'){
+    const name = prompt('Renomear coluna:', colDef.name);
+    if(name===null) return;
+    colDef.name = (name.trim()||colDef.name).slice(0,30);
+    render(); markDirty();
+  }
+  if(act==='toggleDone'){
+    colDef.done = !colDef.done;
+    render(); markDirty();
+    toast(colDef.done
+      ? `"${colDef.name}" agora é coluna de conclusão — tarefas nela ficam riscadas.`
+      : `"${colDef.name}" voltou a ser uma coluna comum.`);
+  }
+  if(act==='delete'){
+    if(b.columns.length<=1){
+      toast('O quadro precisa de pelo menos uma coluna.');
+      return;
+    }
+    const colCards = b.cards.filter(c=>c.col===colId);
+    const others = b.columns.filter(c=>c.id!==colId);
+    const destName = others[0].name;
+    const msg = colCards.length
+      ? `Excluir a coluna "${colDef.name}"?\n\nAs ${colCards.length} tarefa(s) dela serão movidas para "${destName}".`
+      : `Excluir a coluna "${colDef.name}"?`;
+    if(!confirm(msg)) return;
+    colCards.forEach(c=> c.col = others[0].id);
+    b.columns = others;
+    render(); markDirty();
+    toast('Coluna excluída'+(colCards.length?` — tarefas movidas para "${destName}"`:''));
+  }
+}
+
+/* ---- cards ---- */
+function cardEl(c, colDef){
   const el = document.createElement('article');
-  el.className = 'card' + (c.col==='done'?' done-card':'') + (pomo.cardId===c.id && pomo.running?' focused':'');
+  el.className = 'card' + (colDef.done?' done-card':'') + (pomo.cardId===c.id && pomo.running?' focused':'');
   el.dataset.p = c.priority;
   el.dataset.id = c.id;
   el.draggable = true;
@@ -869,59 +1155,16 @@ function cardEl(c){
   return el;
 }
 
-/* Drag & drop nas colunas */
-document.querySelectorAll('.col').forEach(col=>{
-  col.addEventListener('dragover', e=>{ e.preventDefault(); col.classList.add('dragover'); });
-  col.addEventListener('dragleave', e=>{ if(!col.contains(e.relatedTarget)) col.classList.remove('dragover'); });
-  col.addEventListener('drop', e=>{
-    e.preventDefault(); col.classList.remove('dragover');
-    const id = e.dataTransfer.getData('text/plain');
-    moveCard(id, col.dataset.col);
-  });
-});
-
-function moveCard(id, dest){
+function moveCard(id, destColId){
   const c = cards().find(x=>x.id===id);
-  if(!c || c.col===dest) return;
-  const from = c.col;
-  c.col = dest;
-  if(dest==='done' && from!=='done') toast('Tarefa concluída! 🎉');
+  if(!c || c.col===destColId) return;
+  const wasDone = doneColIds().includes(c.col);
+  c.col = destColId;
+  const isDone = doneColIds().includes(destColId);
+  if(isDone && !wasDone) toast('Tarefa concluída! 🎉');
   render(); markDirty();
   if(openCardId===id) syncMoveButtons(c);
 }
-
-/* Adicionar tarefas */
-document.querySelectorAll('[data-add]').forEach(btn=>{
-  btn.addEventListener('click', ()=> addFrom(btn.dataset.add));
-});
-['todo','doing','done'].forEach(col=>{
-  document.getElementById('add-'+col).addEventListener('keydown', e=>{
-    if(e.key==='Enter') addFrom(col);
-  });
-});
-function addFrom(col){
-  const b = activeBoard(); if(!b) return;
-  const input = document.getElementById('add-'+col);
-  const title = input.value.trim();
-  if(!title) return;
-  b.cards.unshift({
-    id:uid(), title, desc:'', col, priority:'normal', due:'',
-    labels:[], subtasks:[], pomos:0, createdAt:Date.now()
-  });
-  input.value='';
-  render(); markDirty();
-}
-
-/* Limpar concluídos */
-document.getElementById('clearDone').addEventListener('click', ()=>{
-  const b = activeBoard(); if(!b) return;
-  const n = b.cards.filter(c=>c.col==='done').length;
-  if(!n) return;
-  if(confirm(`Excluir as ${n} tarefa(s) concluída(s)? Essa ação não pode ser desfeita.`)){
-    b.cards = b.cards.filter(c=>c.col!=='done');
-    render(); markDirty();
-  }
-});
 
 /* Busca e filtros */
 document.getElementById('searchInput').addEventListener('input', e=>{
@@ -947,7 +1190,7 @@ function openModal(id){
   document.getElementById('mPriority').value = c.priority;
   document.getElementById('mDue').value = c.due||'';
   document.getElementById('mDesc').value = c.desc||'';
-  renderLabels(c); renderSubtasks(c); syncMoveButtons(c);
+  renderLabels(c); renderSubtasks(c); renderMoveButtons(c);
   document.getElementById('mPomoStat').textContent =
     c.pomos ? `🍅 ${c.pomos} pomodoro(s) concluído(s) nesta tarefa` : '';
   overlay.classList.add('open');
@@ -962,6 +1205,17 @@ overlay.addEventListener('click', e=>{ if(e.target===overlay) closeModal(); });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape' && overlay.classList.contains('open')) closeModal(); });
 
 function currentCard(){ return cards().find(x=>x.id===openCardId); }
+
+function renderMoveButtons(c){
+  const wrap = document.getElementById('mMove');
+  wrap.innerHTML = columns().map(col=>
+    `<button class="btn ${col.id===c.col?'here':''}" data-move="${col.id}">${esc(col.name)}</button>`
+  ).join('');
+  wrap.querySelectorAll('[data-move]').forEach(b=>{
+    b.addEventListener('click', ()=>{ if(openCardId) moveCard(openCardId, b.dataset.move); });
+  });
+}
+function syncMoveButtons(c){ renderMoveButtons(c); }
 
 document.getElementById('mTitle').addEventListener('input', e=>{
   const c=currentCard(); if(!c) return;
@@ -1038,15 +1292,6 @@ function addSub(){
   renderSubtasks(c); render(); markDirty();
 }
 
-function syncMoveButtons(c){
-  document.querySelectorAll('#mMove [data-move]').forEach(b=>{
-    b.classList.toggle('here', b.dataset.move===c.col);
-  });
-}
-document.querySelectorAll('#mMove [data-move]').forEach(b=>{
-  b.addEventListener('click', ()=>{ if(openCardId) moveCard(openCardId, b.dataset.move); });
-});
-
 document.getElementById('mDelete').addEventListener('click', ()=>{
   const b = activeBoard();
   const c = currentCard(); if(!c || !b) return;
@@ -1077,9 +1322,11 @@ function fmt(sec){
 function modeTotal(){ return POMO[pomo.mode==='focus'?'focus':pomo.mode==='short'?'short':'long']; }
 
 function findCardAnyBoard(id){
-  for(const b of state.boards){
-    const c = b.cards.find(x=>x.id===id);
-    if(c) return c;
+  for(const w of state.workspaces){
+    for(const b of w.boards){
+      const c = b.cards.find(x=>x.id===id);
+      if(c) return c;
+    }
   }
   return null;
 }
@@ -1198,7 +1445,7 @@ function syncUiRefresh(){
 
 function cloudPayload(){
   const p = Object.assign({}, state);
-  delete p.syncUrl; delete p.syncToken; /* credenciais ficam só no dispositivo */
+  delete p.syncUrl; delete p.syncToken;
   return p;
 }
 
@@ -1235,18 +1482,19 @@ async function syncPull(interactive){
     if(!j.ok) throw new Error(j.error||'erro');
     let remote = null;
     try{ remote = JSON.parse(j.data); }catch(e){}
-    if(remote && Array.isArray(remote.boards) && remote.boards.length){
+    const remoteHasData = remote && ((Array.isArray(remote.workspaces) && remote.workspaces.length) || (Array.isArray(remote.boards) && remote.boards.length));
+    if(remoteHasData){
       if((remote.lastModified||0) > (state.lastModified||0)){
         const keep = { syncUrl: state.syncUrl, syncToken: state.syncToken };
         state = Object.assign({}, state, remote, keep);
+        normalizeState(state);
         if(state.pomosDate !== todayStr()){ state.pomosToday = 0; state.pomosDate = todayStr(); }
-        if(!state.boards.find(b=>b.id===state.activeBoardId)) state.activeBoardId = state.boards[0].id;
-        applyTheme(); renderBoardSelect(); render(); renderPomo();
-        dirty = true; clearTimeout(saveTimer); save(); /* atualiza o cache local */
+        if(!state.workspaces.find(w=>w.id===state.activeWorkspaceId)) state.activeWorkspaceId = state.workspaces[0].id;
+        applyTheme(); renderPickers(); render(); renderPomo();
+        dirty = true; clearTimeout(saveTimer); save();
         if(interactive) toast('Dados atualizados da nuvem ✓');
       } else {
         if(interactive) toast('Você já está com a versão mais recente ✓');
-        /* local é mais novo que a nuvem: envia */
         if((state.lastModified||0) > (remote.lastModified||0)) schedulePush();
       }
     } else {
@@ -1318,13 +1566,14 @@ document.addEventListener('keydown', e=>{
 function exportPayload(){
   return JSON.stringify({
     app:'kanban-todo-doing-done',
-    version:2,
+    version:4,
     exportedAt:new Date().toISOString(),
-    boards:state.boards,
-    activeBoardId:state.activeBoardId,
+    workspaces:state.workspaces,
+    activeWorkspaceId:state.activeWorkspaceId,
     theme:state.theme,
     pomosToday:state.pomosToday,
     pomosDate:state.pomosDate,
+    lastModified:state.lastModified,
   }, null, 2);
 }
 
@@ -1335,14 +1584,13 @@ document.getElementById('exportFile').addEventListener('click', ()=>{
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'meus-quadros-'+todayStr()+'.json';
+    a.download = 'meus-workspaces-'+todayStr()+'.json';
     document.body.appendChild(a);
     a.click();
     a.remove();
     setTimeout(()=>URL.revokeObjectURL(url), 2000);
     toast('Backup baixado! Guarde o arquivo .json');
   }catch(e){
-    /* ambiente bloqueia download: mostra o código para copiar */
     exportArea.value = json;
     exportArea.style.display='block';
     exportArea.select();
@@ -1365,32 +1613,66 @@ document.getElementById('exportCopy').addEventListener('click', async ()=>{
 
 function validateBackup(data){
   if(!data || typeof data!=='object') return null;
-  /* formato atual (multi-quadros) */
-  if(Array.isArray(data.boards)){
-    const boards = data.boards
-      .filter(b=>b && typeof b==='object' && Array.isArray(b.cards))
-      .map(b=>({ id:String(b.id||uid()), name:String(b.name||'Quadro'), cards:sanitizeCards(b.cards) }));
-    if(!boards.length) return null;
-    return {boards, theme:data.theme==='dark'?'dark':'light',
-            activeBoardId:data.activeBoardId,
-            pomosToday:Number(data.pomosToday)||0, pomosDate:data.pomosDate||todayStr()};
+
+  /* v4: workspaces */
+  if(Array.isArray(data.workspaces) && data.workspaces.length){
+    const workspaces = data.workspaces
+      .filter(w=>w && typeof w==='object' && Array.isArray(w.boards))
+      .map(w=>({
+        id:String(w.id||uid()),
+        name:String(w.name||'Workspace').slice(0,40),
+        activeBoardId:w.activeBoardId,
+        boards:sanitizeBoards(w.boards),
+      }))
+      .filter(w=>w.boards.length);
+    if(!workspaces.length) return null;
+    return {workspaces, theme:data.theme==='dark'?'dark':'light',
+            activeWorkspaceId:data.activeWorkspaceId,
+            pomosToday:Number(data.pomosToday)||0, pomosDate:data.pomosDate||todayStr(),
+            lastModified:Number(data.lastModified)||Date.now()};
   }
-  /* formato antigo (quadro único) */
+  /* v2/v3: boards soltos */
+  if(Array.isArray(data.boards) && data.boards.length){
+    const boards = sanitizeBoards(data.boards);
+    if(!boards.length) return null;
+    const ws = { id:uid(), name:'Geral', boards, activeBoardId:data.activeBoardId };
+    return {workspaces:[ws], theme:data.theme==='dark'?'dark':'light',
+            activeWorkspaceId:ws.id,
+            pomosToday:Number(data.pomosToday)||0, pomosDate:data.pomosDate||todayStr(),
+            lastModified:Number(data.lastModified)||Date.now()};
+  }
+  /* v1: cards soltos */
   if(Array.isArray(data.cards)){
-    return {boards:[{id:uid(), name:'Meu Quadro', cards:sanitizeCards(data.cards)}],
-            theme:data.theme==='dark'?'dark':'light', activeBoardId:null,
-            pomosToday:0, pomosDate:todayStr()};
+    const b = { id:uid(), name:'Meu Quadro', columns:defaultColumns(), cards:sanitizeCards(data.cards) };
+    const ws = { id:uid(), name:'Geral', boards:[b], activeBoardId:b.id };
+    return {workspaces:[ws], theme:data.theme==='dark'?'dark':'light', activeWorkspaceId:ws.id,
+            pomosToday:0, pomosDate:todayStr(), lastModified:Date.now()};
   }
   return null;
 }
+function sanitizeBoards(arr){
+  return arr.filter(b=>b && typeof b==='object' && Array.isArray(b.cards)).map(b=>({
+    id:String(b.id||uid()),
+    name:String(b.name||'Quadro').slice(0,40),
+    columns:sanitizeColumns(b.columns),
+    cards:sanitizeCards(b.cards),
+  }));
+}
+function sanitizeColumns(arr){
+  if(!Array.isArray(arr) || !arr.length) return defaultColumns();
+  return arr.slice(0,MAX_COLS).filter(c=>c && typeof c==='object').map(c=>({
+    id:String(c.id||uid()),
+    name:String(c.name||'Coluna').slice(0,30),
+    done:!!c.done,
+  }));
+}
 function sanitizeCards(arr){
-  const cols = ['todo','doing','done'];
   const pris = ['urgente','alta','normal','baixa'];
   return arr.filter(c=>c && typeof c==='object' && c.title).map(c=>({
     id:String(c.id||uid()),
     title:String(c.title).slice(0,300),
     desc:String(c.desc||'').slice(0,5000),
-    col:cols.includes(c.col)?c.col:'todo',
+    col:String(c.col||''),
     priority:pris.includes(c.priority)?c.priority:'normal',
     due:typeof c.due==='string'?c.due.slice(0,10):'',
     labels:Array.isArray(c.labels)?c.labels.filter(l=>l&&l.name).map((l,i)=>({
@@ -1410,25 +1692,27 @@ function doImport(rawText){
   try{ data = JSON.parse(rawText); }
   catch(e){ toast('Código inválido: não é um JSON válido.'); return; }
   const parsed = validateBackup(data);
-  if(!parsed){ toast('Este arquivo/código não parece ser um backup deste quadro.'); return; }
+  if(!parsed){ toast('Este arquivo/código não parece ser um backup deste app.'); return; }
 
-  const nBoards = parsed.boards.length;
-  const nCards = parsed.boards.reduce((s,b)=>s+b.cards.length,0);
-  const curCards = state.boards.reduce((s,b)=>s+b.cards.length,0);
+  const nWs = parsed.workspaces.length;
+  const nBoards = parsed.workspaces.reduce((s,w)=>s+w.boards.length,0);
+  const nCards = parsed.workspaces.reduce((s,w)=>s+w.boards.reduce((x,b)=>x+b.cards.length,0),0);
+  const curCards = state.workspaces.reduce((s,w)=>s+w.boards.reduce((x,b)=>x+b.cards.length,0),0);
   const warn = curCards
-    ? `Importar ${nBoards} quadro(s) com ${nCards} tarefa(s)?\n\nIsso SUBSTITUI seus ${state.boards.length} quadro(s) atuais (${curCards} tarefa(s)) neste dispositivo. Essa ação não pode ser desfeita.`
-    : `Importar ${nBoards} quadro(s) com ${nCards} tarefa(s)?`;
+    ? `Importar ${nWs} workspace(s), ${nBoards} quadro(s), ${nCards} tarefa(s)?\n\nIsso SUBSTITUI todos os seus dados atuais deste dispositivo (${curCards} tarefa(s)). Essa ação não pode ser desfeita.`
+    : `Importar ${nWs} workspace(s), ${nBoards} quadro(s), ${nCards} tarefa(s)?`;
   if(!confirm(warn)) return;
 
-  state.boards = parsed.boards;
-  state.activeBoardId = parsed.boards.find(b=>b.id===parsed.activeBoardId) ? parsed.activeBoardId : parsed.boards[0].id;
+  state.workspaces = parsed.workspaces;
+  state.activeWorkspaceId = parsed.workspaces.find(w=>w.id===parsed.activeWorkspaceId) ? parsed.activeWorkspaceId : parsed.workspaces[0].id;
   state.theme = parsed.theme;
   state.pomosToday = parsed.pomosDate===todayStr() ? parsed.pomosToday : 0;
   state.pomosDate = todayStr();
+  normalizeState(state);
 
-  applyTheme(); renderBoardSelect(); render(); renderPomo(); markDirty();
+  applyTheme(); renderPickers(); render(); renderPomo(); markDirty();
   backupOverlay.classList.remove('open');
-  toast(`Importado: ${nBoards} quadro(s), ${nCards} tarefa(s) ✓`);
+  toast(`Importado: ${nWs} workspace(s), ${nBoards} quadro(s), ${nCards} tarefa(s) ✓`);
 }
 
 document.getElementById('importFileBtn').addEventListener('click', ()=>{
