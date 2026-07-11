@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meus Quadros — To Do · Doing · Done</title>
+<style>
+  :root{
+    --bg:#EDF0F3;
+    --surface:#FFFFFF;
+    --surface-2:#F7F9FA;
+    --ink:#1B2733;
+    --ink-soft:#5B6B7B;
+    --ink-faint:#93A1AF;
+    --line:#E1E7EC;
+    --accent:#155E63;
+    --accent-soft:#E3F0EF;
+    --tomato:#D93B2B;
+    --tomato-soft:#FCE9E6;
+    --ok:#2E8B57;
+    --ok-soft:#E6F4EC;
+    --warn:#C77700;
+    --warn-soft:#FBF0DC;
+    --urgent:#C62828;
+    --high:#E07B00;
+    --normal:#2F6FB2;
+    --low:#8A97A3;
+    --danger-soft:#FBECEB;
+    --danger-line:#F0C7C3;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(27,39,51,.06), 0 4px 14px rgba(27,39,51,.06);
+    --shadow-lift:0 6px 24px rgba(27,39,51,.16);
+    --overlay-bg:rgba(17,27,36,.45);
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  [data-theme="dark"]{
+    --bg:#11171E;
+    --surface:#1C2531;
+    --surface-2:#161E28;
+    --ink:#E9EEF3;
+    --ink-soft:#A3B1BF;
+    --ink-faint:#6B7A89;
+    --line:#2B3743;
+    --accent:#4DB6AE;
+    --accent-soft:#16302F;
+    --tomato:#F0604F;
+    --tomato-soft:#3B2320;
+    --ok:#57C285;
+    --ok-soft:#1B3126;
+    --warn:#E8A33D;
+    --warn-soft:#332A14;
+    --urgent:#EF6A5F;
+    --high:#F09B3C;
+    --normal:#6AA6E0;
+    --low:#7C8B99;
+    --danger-soft:#3A2422;
+    --danger-line:#5A3532;
+    --shadow:0 1px 2px rgba(0,0,0,.25), 0 4px 14px rgba(0,0,0,.25);
+    --shadow-lift:0 8px 28px rgba(0,0,0,.45);
+    --overlay-bg:rgba(0,0,0,.6);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:var(--font);
+    background:var(--bg);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    display:flex;flex-direction:column;
+    transition:background .25s,color .25s;
+  }
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  input,textarea,select{font-family:inherit;font-size:inherit;color:inherit}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+
+  /* ---------- Header ---------- */
+  header{
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    padding:12px 20px;
+    background:var(--surface);
+    border-bottom:1px solid var(--line);
+    position:sticky;top:0;z-index:40;
+  }
+  .boards{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .board-select{
+    border:1px solid var(--line);border-radius:10px;
+    background:var(--surface-2);
+    padding:8px 10px;font-size:14px;font-weight:700;
+    max-width:220px;outline:none;
+  }
+  .board-select:focus{border-color:var(--accent)}
+  .board-tool{
+    width:34px;height:34px;border-radius:9px;
+    border:1px solid var(--line);background:var(--surface-2);
+    display:flex;align-items:center;justify-content:center;
+    font-size:14px;transition:all .15s;flex:none;
+  }
+  .board-tool:hover{border-color:var(--ink-faint)}
+  .board-tool.danger:hover{border-color:var(--danger-line);background:var(--danger-soft);color:var(--urgent)}
+  .save-status{
+    font-size:10.5px;font-weight:700;letter-spacing:.03em;
+    padding:3px 9px;border-radius:999px;
+    background:var(--ok-soft);color:var(--ok);
+    transition:all .2s;white-space:nowrap;
+  }
+  .save-status.saving{background:var(--warn-soft);color:var(--warn)}
+  .save-status.error{background:var(--danger-soft);color:var(--urgent)}
+  .search{
+    flex:1;min-width:140px;max-width:300px;
+    display:flex;align-items:center;gap:8px;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:10px;padding:8px 12px;
+  }
+  .search svg{flex:none;opacity:.45}
+  .search input{border:none;background:none;outline:none;width:100%;font-size:13.5px}
+  .filters{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .chip{
+    font-size:12px;font-weight:600;
+    padding:6px 11px;border-radius:999px;
+    border:1px solid var(--line);
+    background:var(--surface);
+    color:var(--ink-soft);
+    transition:all .15s;
+  }
+  .chip.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+  .theme-btn{
+    width:38px;height:38px;border-radius:10px;
+    border:1px solid var(--line);background:var(--surface-2);
+    display:flex;align-items:center;justify-content:center;
+    font-size:16px;transition:all .15s;flex:none;
+  }
+  .theme-btn:hover{border-color:var(--ink-faint)}
+
+  /* ---------- Pomodoro ---------- */
+  .pomo{
+    display:flex;align-items:center;gap:12px;
+    margin-left:auto;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:999px;
+    padding:6px 14px 6px 6px;
+  }
+  .pomo.running{border-color:var(--tomato);background:var(--tomato-soft);box-shadow:0 0 0 4px rgba(217,59,43,.1)}
+  .pomo-ring{position:relative;width:46px;height:46px;flex:none}
+  .pomo-ring svg{transform:rotate(-90deg)}
+  .pomo-ring .track{stroke:var(--line);fill:none;stroke-width:4}
+  .pomo-ring .bar{stroke:var(--tomato);fill:none;stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .5s linear}
+  .pomo-ring.break .bar{stroke:var(--ok)}
+  .pomo-ring .emoji{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:17px}
+  .pomo-info{display:flex;flex-direction:column;line-height:1.15;min-width:74px}
+  .pomo-time{font-variant-numeric:tabular-nums;font-weight:700;font-size:16px}
+  .pomo-label{font-size:10.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pomo-btns{display:flex;gap:4px}
+  .icon-btn{
+    width:32px;height:32px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--surface);border:1px solid var(--line);
+    transition:all .15s;
+  }
+  .icon-btn:hover{border-color:var(--ink-faint)}
+  .icon-btn.primary{background:var(--tomato);border-color:var(--tomato);color:#fff}
+  .pomo-count{font-size:12px;color:var(--ink-soft);white-space:nowrap}
+
+  /* ---------- Board ---------- */
+  main{flex:1;overflow:auto;padding:18px 20px 30px}
+  .board{
+    display:grid;grid-template-columns:repeat(3,minmax(270px,1fr));
+    gap:16px;max-width:1180px;margin:0 auto;
+    align-items:start;
+  }
+  .col{
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    display:flex;flex-direction:column;
+    max-height:calc(100vh - 140px);
+  }
+  .col-head{display:flex;align-items:center;gap:8px;padding:13px 14px 10px}
+  .col-dot{width:9px;height:9px;border-radius:50%;flex:none}
+  .col[data-col="todo"] .col-dot{background:var(--ink-faint)}
+  .col[data-col="doing"] .col-dot{background:var(--warn)}
+  .col[data-col="done"] .col-dot{background:var(--ok)}
+  .col-head h2{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.07em}
+  .col-count{
+    font-size:11.5px;font-weight:700;color:var(--ink-soft);
+    background:var(--surface);border:1px solid var(--line);
+    border-radius:999px;padding:2px 8px;
+  }
+  .col-clear{margin-left:auto;font-size:11.5px;color:var(--ink-faint);padding:4px 6px;border-radius:6px}
+  .col-clear:hover{color:var(--urgent);background:var(--surface)}
+  .cards{
+    flex:1;overflow-y:auto;
+    display:flex;flex-direction:column;gap:9px;
+    padding:4px 12px 10px;min-height:60px;
+  }
+  .col.dragover .cards{outline:2px dashed var(--accent);outline-offset:-4px;border-radius:10px;background:var(--accent-soft)}
+
+  /* ---------- Card ---------- */
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:11px;
+    padding:11px 12px 10px;
+    box-shadow:var(--shadow);
+    cursor:grab;position:relative;
+    border-left:4px solid transparent;
+    transition:box-shadow .15s, transform .15s;
+  }
+  .card:hover{box-shadow:var(--shadow-lift);transform:translateY(-1px)}
+  .card.dragging{opacity:.45;transform:rotate(2deg)}
+  .card[data-p="urgente"]{border-left-color:var(--urgent)}
+  .card[data-p="alta"]{border-left-color:var(--high)}
+  .card[data-p="normal"]{border-left-color:var(--normal)}
+  .card[data-p="baixa"]{border-left-color:var(--low)}
+  .card.done-card .card-title{color:var(--ink-faint);text-decoration:line-through}
+  .card.focused{outline:2px solid var(--tomato);outline-offset:1px}
+  .card-labels{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+  .label{
+    font-size:10.5px;font-weight:700;letter-spacing:.02em;
+    padding:2px 8px;border-radius:999px;color:#fff;
+  }
+  .card-title{font-size:13.8px;font-weight:600;line-height:1.35;word-break:break-word}
+  .card-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:11.5px;color:var(--ink-soft)}
+  .meta-pill{display:flex;align-items:center;gap:4px}
+  .meta-pill.overdue{color:var(--urgent);font-weight:700}
+  .meta-pill.today{color:var(--warn);font-weight:700}
+  .subbar{height:4px;border-radius:999px;background:var(--line);flex:1;min-width:44px;max-width:90px;overflow:hidden}
+  .subbar i{display:block;height:100%;background:var(--accent);border-radius:999px;transition:width .2s}
+  .card-focus-btn{
+    position:absolute;top:8px;right:8px;
+    width:26px;height:26px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px;opacity:0;transition:opacity .15s;
+    background:var(--tomato-soft);
+  }
+  .card:hover .card-focus-btn{opacity:1}
+  @media (hover:none){.card-focus-btn{opacity:.85}}
+
+  .add-card{margin:0 12px 12px;display:flex;gap:6px}
+  .add-card input{
+    flex:1;border:1px dashed var(--line);border-radius:9px;
+    background:transparent;padding:9px 11px;font-size:13px;outline:none;color:var(--ink);
+  }
+  .add-card input:focus{border-color:var(--accent);border-style:solid;background:var(--surface)}
+  .add-card button{
+    border-radius:9px;padding:0 13px;font-weight:700;font-size:13px;
+    background:var(--ink);color:var(--bg);
+  }
+
+  .empty{
+    text-align:center;color:var(--ink-faint);font-size:12.5px;
+    padding:18px 8px;border:1px dashed var(--line);border-radius:10px;
+  }
+
+  /* ---------- Modal ---------- */
+  .overlay{
+    position:fixed;inset:0;background:var(--overlay-bg);
+    display:none;align-items:flex-start;justify-content:center;
+    padding:6vh 16px 16px;z-index:100;overflow:auto;
+  }
+  .overlay.open{display:flex}
+  .modal{
+    background:var(--surface);border-radius:16px;
+    width:100%;max-width:560px;
+    box-shadow:var(--shadow-lift);
+    padding:20px 22px 22px;
+    animation:pop .18s ease;
+  }
+  @keyframes pop{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+  .modal-top{display:flex;align-items:flex-start;gap:10px}
+  .modal-title{
+    flex:1;font-size:17px;font-weight:700;border:none;outline:none;
+    padding:4px 6px;border-radius:8px;width:100%;background:transparent;
+  }
+  .modal-title:focus{background:var(--surface-2)}
+  .modal-close{font-size:20px;color:var(--ink-faint);width:34px;height:34px;border-radius:8px}
+  .modal-close:hover{background:var(--surface-2)}
+  .field{margin-top:15px}
+  .field>label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-soft);margin-bottom:6px}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .row .field{flex:1;min-width:140px}
+  select,.date-input,textarea{
+    width:100%;border:1px solid var(--line);border-radius:9px;
+    padding:9px 10px;font-size:13.5px;background:var(--surface);outline:none;
+  }
+  [data-theme="dark"] .date-input{color-scheme:dark}
+  textarea{resize:vertical;min-height:64px;line-height:1.5}
+  select:focus,.date-input:focus,textarea:focus{border-color:var(--accent)}
+  .label-editor{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .label-editor .label{display:flex;align-items:center;gap:5px;font-size:11px;padding:4px 6px 4px 10px}
+  .label-editor .label button{color:#fff;opacity:.75;font-size:12px;line-height:1}
+  .label-add{display:flex;gap:6px}
+  .label-add input{border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-size:12.5px;outline:none;width:130px;background:var(--surface)}
+  .label-add button{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:0 10px;font-size:12px;font-weight:700}
+  .subtask{display:flex;align-items:center;gap:9px;padding:6px 2px;border-bottom:1px solid var(--surface-2)}
+  .subtask input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);flex:none}
+  .subtask span{flex:1;font-size:13.5px}
+  .subtask.check span{color:var(--ink-faint);text-decoration:line-through}
+  .subtask .del{color:var(--ink-faint);font-size:14px;padding:2px 6px;border-radius:6px}
+  .subtask .del:hover{color:var(--urgent);background:var(--surface-2)}
+  .sub-add{display:flex;gap:6px;margin-top:8px}
+  .sub-add input{flex:1;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;outline:none;background:var(--surface)}
+  .sub-add input:focus{border-color:var(--accent)}
+  .sub-add button{background:var(--accent);color:#fff;border-radius:8px;padding:0 13px;font-weight:700;font-size:13px}
+  .modal-actions{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap}
+  .btn{
+    border-radius:9px;padding:9px 14px;font-size:13px;font-weight:700;
+    border:1px solid var(--line);background:var(--surface-2);
+  }
+  .btn.tomato{background:var(--tomato);border-color:var(--tomato);color:#fff}
+  .btn.danger{color:var(--urgent)}
+  .btn.danger:hover{background:var(--danger-soft);border-color:var(--danger-line)}
+  .move-group{display:flex;gap:6px;flex:1}
+  .move-group .btn{flex:1}
+  .move-group .btn.here{background:var(--ink);border-color:var(--ink);color:var(--bg);pointer-events:none}
+  .pomo-stat{font-size:12.5px;color:var(--ink-soft);margin-top:4px}
+
+  /* ---------- Toast ---------- */
+  .toast{
+    position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:var(--bg);font-size:13px;font-weight:600;
+    padding:11px 18px;border-radius:999px;opacity:0;pointer-events:none;
+    transition:all .25s;z-index:200;box-shadow:var(--shadow-lift);
+    max-width:90vw;text-align:center;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .loading{
+    flex:1;display:flex;align-items:center;justify-content:center;
+    color:var(--ink-soft);font-size:14px;gap:10px;
+  }
+  .spin{
+    width:18px;height:18px;border-radius:50%;
+    border:2.5px solid var(--line);border-top-color:var(--accent);
+    animation:spin .8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  @media (max-width:860px){
+    .board{grid-template-columns:1fr;max-width:560px}
+    .col{max-height:none}
+    header{padding:12px 14px;gap:10px}
+    .pomo{margin-left:0;width:100%;justify-content:space-between}
+    main{padding:14px 14px 28px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="boards">
+    <select class="board-select" id="boardSelect" aria-label="Escolher quadro"></select>
+    <button class="board-tool" id="boardNew" title="Novo quadro" aria-label="Criar novo quadro">＋</button>
+    <button class="board-tool" id="boardRename" title="Renomear quadro" aria-label="Renomear quadro">✏️</button>
+    <button class="board-tool danger" id="boardDelete" title="Excluir quadro" aria-label="Excluir quadro">🗑</button>
+    <button class="board-tool" id="backupOpen" title="Backup: exportar/importar" aria-label="Backup: exportar ou importar dados">💾</button>
+    <span class="save-status" id="saveStatus">Salvo ✓</span>
+    <span class="save-status" id="syncStatus" style="display:none">Nuvem ✓</span>
+  </div>
+
+  <div class="search" role="search">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+    <input id="searchInput" type="text" placeholder="Buscar tarefas..." aria-label="Buscar tarefas">
+  </div>
+
+  <div class="filters" id="priorityFilters" aria-label="Filtrar por prioridade">
+    <button class="chip" data-pf="urgente">Urgente</button>
+    <button class="chip" data-pf="alta">Alta</button>
+    <button class="chip" data-pf="normal">Normal</button>
+    <button class="chip" data-pf="baixa">Baixa</button>
+  </div>
+
+  <button class="theme-btn" id="themeToggle" aria-label="Alternar tema claro/escuro" title="Tema claro/escuro">🌙</button>
+
+  <div class="pomo" id="pomoBox">
+    <div class="pomo-ring" id="pomoRing">
+      <svg width="46" height="46" viewBox="0 0 46 46">
+        <circle class="track" cx="23" cy="23" r="19"></circle>
+        <circle class="bar" id="pomoBar" cx="23" cy="23" r="19"
+                stroke-dasharray="119.38" stroke-dashoffset="0"></circle>
+      </svg>
+      <div class="emoji" id="pomoEmoji">🍅</div>
+    </div>
+    <div class="pomo-info">
+      <span class="pomo-time" id="pomoTime">25:00</span>
+      <span class="pomo-label" id="pomoLabel">Pronto para focar</span>
+    </div>
+    <div class="pomo-btns">
+      <button class="icon-btn primary" id="pomoToggle" aria-label="Iniciar ou pausar pomodoro">
+        <svg id="pomoToggleIcon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+      <button class="icon-btn" id="pomoReset" aria-label="Reiniciar pomodoro">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+      </button>
+    </div>
+    <span class="pomo-count" id="pomoCount"></span>
+  </div>
+</header>
+
+<main>
+  <div class="loading" id="loading"><div class="spin"></div> Carregando seus quadros...</div>
+
+  <div class="board" id="board" style="display:none">
+    <section class="col" data-col="todo">
+      <div class="col-head">
+        <span class="col-dot"></span><h2>To do</h2>
+        <span class="col-count" id="count-todo">0</span>
+      </div>
+      <div class="cards" id="cards-todo"></div>
+      <div class="add-card">
+        <input type="text" id="add-todo" placeholder="Nova tarefa..." aria-label="Nova tarefa em To do">
+        <button data-add="todo" aria-label="Adicionar em To do">+</button>
+      </div>
+    </section>
+
+    <section class="col" data-col="doing">
+      <div class="col-head">
+        <span class="col-dot"></span><h2>Doing</h2>
+        <span class="col-count" id="count-doing">0</span>
+      </div>
+      <div class="cards" id="cards-doing"></div>
+      <div class="add-card">
+        <input type="text" id="add-doing" placeholder="Nova tarefa..." aria-label="Nova tarefa em Doing">
+        <button data-add="doing" aria-label="Adicionar em Doing">+</button>
+      </div>
+    </section>
+
+    <section class="col" data-col="done">
+      <div class="col-head">
+        <span class="col-dot"></span><h2>Done</h2>
+        <span class="col-count" id="count-done">0</span>
+        <button class="col-clear" id="clearDone">Limpar</button>
+      </div>
+      <div class="cards" id="cards-done"></div>
+      <div class="add-card">
+        <input type="text" id="add-done" placeholder="Nova tarefa..." aria-label="Nova tarefa em Done">
+        <button data-add="done" aria-label="Adicionar em Done">+</button>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- Modal de detalhes -->
+<div class="overlay" id="overlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Detalhes da tarefa">
+    <div class="modal-top">
+      <input class="modal-title" id="mTitle" aria-label="Título da tarefa">
+      <button class="modal-close" id="mClose" aria-label="Fechar">✕</button>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label for="mPriority">Prioridade</label>
+        <select id="mPriority">
+          <option value="urgente">🔴 Urgente</option>
+          <option value="alta">🟠 Alta</option>
+          <option value="normal" selected>🔵 Normal</option>
+          <option value="baixa">⚪ Baixa</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="mDue">Prazo</label>
+        <input type="date" class="date-input" id="mDue">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Etiquetas</label>
+      <div class="label-editor" id="mLabels"></div>
+      <div class="label-add" style="margin-top:8px">
+        <input type="text" id="mLabelInput" placeholder="Nova etiqueta" maxlength="20">
+        <button id="mLabelAdd">Adicionar</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="mDesc">Notas</label>
+      <textarea id="mDesc" placeholder="Contexto, links, detalhes..."></textarea>
+    </div>
+
+    <div class="field">
+      <label>Subtarefas</label>
+      <div id="mSubtasks"></div>
+      <div class="sub-add">
+        <input type="text" id="mSubInput" placeholder="Nova subtarefa">
+        <button id="mSubAdd">+</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Mover para</label>
+      <div class="move-group" id="mMove">
+        <button class="btn" data-move="todo">To do</button>
+        <button class="btn" data-move="doing">Doing</button>
+        <button class="btn" data-move="done">Done</button>
+      </div>
+    </div>
+
+    <div class="pomo-stat" id="mPomoStat"></div>
+
+    <div class="modal-actions">
+      <button class="btn tomato" id="mFocus">🍅 Focar nesta tarefa</button>
+      <button class="btn danger" id="mDelete" style="margin-left:auto">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de backup -->
+<div class="overlay" id="backupOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Backup dos seus quadros">
+    <div class="modal-top">
+      <span class="modal-title" style="cursor:default">💾 Backup dos seus quadros</span>
+      <button class="modal-close" id="backupClose" aria-label="Fechar">✕</button>
+    </div>
+
+    <div class="field">
+      <label>Sincronização (Google Drive)</label>
+      <p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:8px">
+        Cole a URL do seu script (termina em /exec) e a senha definida nele.
+        Veja o passo a passo no arquivo de instruções.
+      </p>
+      <input type="url" id="syncUrlInput" placeholder="https://script.google.com/macros/s/…/exec"
+             style="width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 10px;font-size:12.5px;background:var(--surface);outline:none;margin-bottom:8px">
+      <input type="password" id="syncTokenInput" placeholder="Senha (a mesma do script)"
+             style="width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 10px;font-size:12.5px;background:var(--surface);outline:none">
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center">
+        <button class="btn" id="syncSaveBtn">Salvar e testar conexão</button>
+        <button class="btn" id="syncNowBtn">🔄 Sincronizar agora</button>
+        <button class="btn danger" id="syncOffBtn">Desativar</button>
+      </div>
+      <p id="syncMsg" style="font-size:12px;color:var(--ink-soft);margin-top:6px"></p>
+    </div>
+
+    <div class="field">
+      <label>Exportar (levar para outro dispositivo)</label>
+      <p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:8px">
+        Gera um arquivo com todos os seus quadros, tarefas e preferências.
+      </p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" id="exportFile">⬇️ Baixar arquivo .json</button>
+        <button class="btn" id="exportCopy">📋 Copiar código</button>
+      </div>
+      <textarea id="exportArea" readonly style="display:none;margin-top:8px;min-height:90px;font-size:11px" aria-label="Código de backup para copiar"></textarea>
+    </div>
+
+    <div class="field">
+      <label>Importar (restaurar neste dispositivo)</label>
+      <p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:8px">
+        Escolha o arquivo exportado ou cole o código abaixo.
+        A importação <strong>substitui</strong> os quadros atuais deste dispositivo.
+      </p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button class="btn" id="importFileBtn">📂 Escolher arquivo .json</button>
+        <input type="file" id="importFileInput" accept=".json,application/json" style="display:none">
+      </div>
+      <textarea id="importArea" placeholder='Ou cole aqui o código do backup (começa com {"boards":...)' style="margin-top:8px;min-height:70px;font-size:11px" aria-label="Colar código de backup"></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn tomato" id="importPasteBtn">Importar código colado</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =============== Armazenamento híbrido ===============
+   1) window.storage (quando aberto dentro do Claude)
+   2) localStorage do navegador (quando aberto como arquivo/site)
+   3) memória (último recurso — avisa que não salva)          */
+const STORAGE_KEY = 'kanban-v2';
+const LEGACY_KEY = 'kanban-board-v1';
+
+const store = (function(){
+  if(window.storage && typeof window.storage.set === 'function'){
+    return {
+      type:'claude',
+      async get(k){ try{ const r = await window.storage.get(k); return r ? r.value : null; }catch(e){ return null; } },
+      async set(k,v){ const r = await window.storage.set(k,v); if(!r) throw new Error('falha ao gravar'); }
+    };
+  }
+  try{
+    const t='__kanban_test__';
+    localStorage.setItem(t,'1'); localStorage.removeItem(t);
+    return {
+      type:'local',
+      async get(k){ return localStorage.getItem(k); },
+      async set(k,v){ localStorage.setItem(k,v); }
+    };
+  }catch(e){}
+  const mem = {};
+  return {
+    type:'memory',
+    async get(k){ return mem[k] ?? null; },
+    async set(k,v){ mem[k]=v; }
+  };
+})();
+
+/* =============== Estado =============== */
+const LABEL_COLORS = ['#155E63','#7C4DBE','#B23A6F','#2F6FB2','#C77700','#2E8B57','#8A5A2B','#546170'];
+
+let state = {
+  boards: [],            // {id, name, cards:[]}
+  activeBoardId: null,
+  pomosToday: 0,
+  pomosDate: todayStr(),
+  theme: 'light',
+  syncUrl: '',
+  syncToken: '',
+  lastModified: 0,
+};
+let filters = { search:'', priorities:new Set() };
+let openCardId = null;
+let saveTimer = null;
+let dirty = false;
+
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function esc(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+function activeBoard(){
+  return state.boards.find(b=>b.id===state.activeBoardId) || state.boards[0];
+}
+function cards(){ return activeBoard() ? activeBoard().cards : []; }
+
+/* =============== Tema =============== */
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme', state.theme);
+  document.getElementById('themeToggle').textContent = state.theme==='dark' ? '☀️' : '🌙';
+}
+document.getElementById('themeToggle').addEventListener('click', ()=>{
+  state.theme = state.theme==='dark' ? 'light' : 'dark';
+  applyTheme(); markDirty();
+});
+
+/* =============== Persistência =============== */
+const saveStatus = document.getElementById('saveStatus');
+function setStatus(kind, text){
+  saveStatus.className = 'save-status' + (kind ? ' '+kind : '');
+  saveStatus.textContent = text;
+}
+
+async function load(){
+  if(store.type==='memory'){
+    setStatus('error','Sem salvamento');
+    toast('Atenção: nenhum armazenamento disponível. As alterações serão perdidas ao fechar.');
+  }
+  try{
+    let raw = await store.get(STORAGE_KEY);
+    if(raw){
+      state = Object.assign(state, JSON.parse(raw));
+    } else {
+      /* migra dados da versão anterior (quadro único) */
+      const legacy = await store.get(LEGACY_KEY);
+      if(legacy){
+        const old = JSON.parse(legacy);
+        const b = { id:uid(), name:'Meu Quadro', cards: old.cards||[] };
+        state.boards = [b];
+        state.activeBoardId = b.id;
+        state.pomosToday = old.pomosToday||0;
+        state.pomosDate = old.pomosDate||todayStr();
+        state.theme = old.theme||'light';
+        dirty = true; save();
+      }
+    }
+  }catch(e){ /* primeira visita */ }
+
+  if(!state.boards.length){
+    const b = { id:uid(), name:'Meu Quadro', cards:[] };
+    state.boards = [b];
+    state.activeBoardId = b.id;
+  }
+  if(!state.boards.find(b=>b.id===state.activeBoardId)){
+    state.activeBoardId = state.boards[0].id;
+  }
+  if(state.pomosDate !== todayStr()){ state.pomosToday = 0; state.pomosDate = todayStr(); }
+
+  applyTheme();
+  document.getElementById('loading').style.display='none';
+  document.getElementById('board').style.display='grid';
+  renderBoardSelect(); render(); renderPomo();
+  syncUiRefresh();
+  if(state.syncUrl) syncPull(false);
+}
+
+function markDirty(){
+  dirty = true;
+  state.lastModified = Date.now();
+  schedulePush();
+  if(store.type==='memory') return;
+  setStatus('saving','Salvando…');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>save(), 300);
+}
+
+async function save(attempt=1){
+  if(store.type==='memory' || !dirty) return;
+  try{
+    await store.set(STORAGE_KEY, JSON.stringify(state));
+    dirty = false;
+    setStatus('','Salvo ✓');
+  }catch(e){
+    if(attempt < 4){
+      setStatus('saving','Salvando…');
+      setTimeout(()=>save(attempt+1), 800*attempt);
+    } else {
+      setStatus('error','Erro ao salvar');
+      toast('Não consegui salvar. Vou tentar novamente na próxima alteração.');
+    }
+  }
+}
+
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState==='hidden' && dirty){ clearTimeout(saveTimer); save(); }
+  if(document.visibilityState==='visible' && state.syncUrl){ syncPull(false); }
+});
+window.addEventListener('pagehide', ()=>{
+  if(dirty){ clearTimeout(saveTimer); save(); }
+});
+
+/* =============== Gestão de quadros =============== */
+const boardSelect = document.getElementById('boardSelect');
+
+function renderBoardSelect(){
+  boardSelect.innerHTML = state.boards.map(b=>
+    `<option value="${b.id}" ${b.id===state.activeBoardId?'selected':''}>${esc(b.name)}</option>`
+  ).join('');
+}
+boardSelect.addEventListener('change', ()=>{
+  state.activeBoardId = boardSelect.value;
+  filters.search=''; document.getElementById('searchInput').value='';
+  render(); markDirty();
+});
+
+document.getElementById('boardNew').addEventListener('click', ()=>{
+  const name = prompt('Nome do novo quadro:', 'Novo quadro');
+  if(name===null) return;
+  const b = { id:uid(), name:(name.trim()||'Novo quadro'), cards:[] };
+  state.boards.push(b);
+  state.activeBoardId = b.id;
+  renderBoardSelect(); render(); markDirty();
+  toast('Quadro "'+b.name+'" criado');
+});
+
+document.getElementById('boardRename').addEventListener('click', ()=>{
+  const b = activeBoard(); if(!b) return;
+  const name = prompt('Renomear quadro:', b.name);
+  if(name===null) return;
+  b.name = name.trim()||b.name;
+  renderBoardSelect(); markDirty();
+});
+
+document.getElementById('boardDelete').addEventListener('click', ()=>{
+  const b = activeBoard(); if(!b) return;
+  if(state.boards.length===1){
+    toast('Este é seu único quadro — crie outro antes de excluir este.');
+    return;
+  }
+  const n = b.cards.length;
+  const msg = n
+    ? `Excluir o quadro "${b.name}" e suas ${n} tarefa(s)? Essa ação não pode ser desfeita.`
+    : `Excluir o quadro "${b.name}"? Essa ação não pode ser desfeita.`;
+  if(confirm(msg)){
+    state.boards = state.boards.filter(x=>x.id!==b.id);
+    state.activeBoardId = state.boards[0].id;
+    renderBoardSelect(); render(); markDirty();
+    toast('Quadro excluído');
+  }
+});
+
+/* =============== Pomodoro (estado) =============== */
+const POMO = { focus:25*60, short:5*60, long:15*60 };
+let pomo = { mode:'focus', remaining:POMO.focus, running:false, cardId:null, cycle:0, tick:null };
+
+/* =============== Render do quadro =============== */
+function cardMatches(c){
+  if(filters.priorities.size && !filters.priorities.has(c.priority)) return false;
+  if(filters.search){
+    const q = filters.search.toLowerCase();
+    const inTitle = c.title.toLowerCase().includes(q);
+    const inLabels = (c.labels||[]).some(l=>l.name.toLowerCase().includes(q));
+    const inDesc = (c.desc||'').toLowerCase().includes(q);
+    if(!inTitle && !inLabels && !inDesc) return false;
+  }
+  return true;
+}
+
+function dueInfo(due){
+  if(!due) return null;
+  const today = todayStr();
+  const d = new Date(due+'T00:00:00');
+  const label = d.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'});
+  if(due < today) return {cls:'overdue', text:'⚠ '+label};
+  if(due === today) return {cls:'today', text:'📅 Hoje'};
+  return {cls:'', text:'📅 '+label};
+}
+
+function render(){
+  ['todo','doing','done'].forEach(col=>{
+    const wrap = document.getElementById('cards-'+col);
+    wrap.innerHTML='';
+    const colCards = cards().filter(c=>c.col===col);
+    document.getElementById('count-'+col).textContent = colCards.length;
+    const visible = colCards.filter(cardMatches);
+    if(!visible.length){
+      const msg = colCards.length ? 'Nenhuma tarefa corresponde ao filtro.'
+        : (col==='todo' ? 'Adicione sua primeira tarefa abaixo.'
+          : col==='doing' ? 'Arraste para cá o que está em andamento.'
+          : 'As conquistas aparecem aqui. 🎉');
+      wrap.innerHTML = '<div class="empty">'+msg+'</div>';
+      return;
+    }
+    visible.forEach(c=> wrap.appendChild(cardEl(c)) );
+  });
+}
+
+function cardEl(c){
+  const el = document.createElement('article');
+  el.className = 'card' + (c.col==='done'?' done-card':'') + (pomo.cardId===c.id && pomo.running?' focused':'');
+  el.dataset.p = c.priority;
+  el.dataset.id = c.id;
+  el.draggable = true;
+  el.setAttribute('role','button');
+  el.tabIndex = 0;
+
+  let html = '';
+  if((c.labels||[]).length){
+    html += '<div class="card-labels">' +
+      c.labels.map(l=>`<span class="label" style="background:${l.color}">${esc(l.name)}</span>`).join('') +
+      '</div>';
+  }
+  html += `<div class="card-title">${esc(c.title)}</div>`;
+
+  const meta = [];
+  const di = dueInfo(c.due);
+  if(di) meta.push(`<span class="meta-pill ${di.cls}">${di.text}</span>`);
+  const subs = c.subtasks||[];
+  if(subs.length){
+    const done = subs.filter(s=>s.done).length;
+    const pct = Math.round(done/subs.length*100);
+    meta.push(`<span class="meta-pill">☑ ${done}/${subs.length}</span><span class="subbar"><i style="width:${pct}%"></i></span>`);
+  }
+  if(c.pomos) meta.push(`<span class="meta-pill">🍅 ${c.pomos}</span>`);
+  if(c.desc) meta.push(`<span class="meta-pill">≡</span>`);
+  if(meta.length) html += `<div class="card-meta">${meta.join('')}</div>`;
+
+  html += `<button class="card-focus-btn" data-focus="${c.id}" aria-label="Focar com pomodoro" title="Focar (Pomodoro)">🍅</button>`;
+  el.innerHTML = html;
+
+  el.addEventListener('click', e=>{
+    if(e.target.closest('[data-focus]')) return;
+    openModal(c.id);
+  });
+  el.addEventListener('keydown', e=>{
+    if(e.key==='Enter' || e.key===' '){ e.preventDefault(); openModal(c.id); }
+  });
+  el.querySelector('[data-focus]').addEventListener('click', ()=> startFocus(c.id));
+
+  el.addEventListener('dragstart', e=>{
+    e.dataTransfer.setData('text/plain', c.id);
+    e.dataTransfer.effectAllowed='move';
+    el.classList.add('dragging');
+  });
+  el.addEventListener('dragend', ()=> el.classList.remove('dragging'));
+  return el;
+}
+
+/* Drag & drop nas colunas */
+document.querySelectorAll('.col').forEach(col=>{
+  col.addEventListener('dragover', e=>{ e.preventDefault(); col.classList.add('dragover'); });
+  col.addEventListener('dragleave', e=>{ if(!col.contains(e.relatedTarget)) col.classList.remove('dragover'); });
+  col.addEventListener('drop', e=>{
+    e.preventDefault(); col.classList.remove('dragover');
+    const id = e.dataTransfer.getData('text/plain');
+    moveCard(id, col.dataset.col);
+  });
+});
+
+function moveCard(id, dest){
+  const c = cards().find(x=>x.id===id);
+  if(!c || c.col===dest) return;
+  const from = c.col;
+  c.col = dest;
+  if(dest==='done' && from!=='done') toast('Tarefa concluída! 🎉');
+  render(); markDirty();
+  if(openCardId===id) syncMoveButtons(c);
+}
+
+/* Adicionar tarefas */
+document.querySelectorAll('[data-add]').forEach(btn=>{
+  btn.addEventListener('click', ()=> addFrom(btn.dataset.add));
+});
+['todo','doing','done'].forEach(col=>{
+  document.getElementById('add-'+col).addEventListener('keydown', e=>{
+    if(e.key==='Enter') addFrom(col);
+  });
+});
+function addFrom(col){
+  const b = activeBoard(); if(!b) return;
+  const input = document.getElementById('add-'+col);
+  const title = input.value.trim();
+  if(!title) return;
+  b.cards.unshift({
+    id:uid(), title, desc:'', col, priority:'normal', due:'',
+    labels:[], subtasks:[], pomos:0, createdAt:Date.now()
+  });
+  input.value='';
+  render(); markDirty();
+}
+
+/* Limpar concluídos */
+document.getElementById('clearDone').addEventListener('click', ()=>{
+  const b = activeBoard(); if(!b) return;
+  const n = b.cards.filter(c=>c.col==='done').length;
+  if(!n) return;
+  if(confirm(`Excluir as ${n} tarefa(s) concluída(s)? Essa ação não pode ser desfeita.`)){
+    b.cards = b.cards.filter(c=>c.col!=='done');
+    render(); markDirty();
+  }
+});
+
+/* Busca e filtros */
+document.getElementById('searchInput').addEventListener('input', e=>{
+  filters.search = e.target.value.trim(); render();
+});
+document.querySelectorAll('[data-pf]').forEach(chip=>{
+  chip.addEventListener('click', ()=>{
+    const p = chip.dataset.pf;
+    if(filters.priorities.has(p)){ filters.priorities.delete(p); chip.classList.remove('on'); }
+    else { filters.priorities.add(p); chip.classList.add('on'); }
+    render();
+  });
+});
+
+/* =============== Modal =============== */
+const overlay = document.getElementById('overlay');
+
+function openModal(id){
+  const c = cards().find(x=>x.id===id);
+  if(!c) return;
+  openCardId = id;
+  document.getElementById('mTitle').value = c.title;
+  document.getElementById('mPriority').value = c.priority;
+  document.getElementById('mDue').value = c.due||'';
+  document.getElementById('mDesc').value = c.desc||'';
+  renderLabels(c); renderSubtasks(c); syncMoveButtons(c);
+  document.getElementById('mPomoStat').textContent =
+    c.pomos ? `🍅 ${c.pomos} pomodoro(s) concluído(s) nesta tarefa` : '';
+  overlay.classList.add('open');
+  document.getElementById('mTitle').focus();
+}
+function closeModal(){
+  overlay.classList.remove('open');
+  openCardId = null;
+}
+document.getElementById('mClose').addEventListener('click', closeModal);
+overlay.addEventListener('click', e=>{ if(e.target===overlay) closeModal(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && overlay.classList.contains('open')) closeModal(); });
+
+function currentCard(){ return cards().find(x=>x.id===openCardId); }
+
+document.getElementById('mTitle').addEventListener('input', e=>{
+  const c=currentCard(); if(!c) return;
+  c.title = e.target.value; render(); markDirty();
+});
+document.getElementById('mPriority').addEventListener('change', e=>{
+  const c=currentCard(); if(!c) return;
+  c.priority = e.target.value; render(); markDirty();
+});
+document.getElementById('mDue').addEventListener('change', e=>{
+  const c=currentCard(); if(!c) return;
+  c.due = e.target.value; render(); markDirty();
+});
+document.getElementById('mDesc').addEventListener('input', e=>{
+  const c=currentCard(); if(!c) return;
+  c.desc = e.target.value; markDirty();
+});
+
+function renderLabels(c){
+  const wrap = document.getElementById('mLabels');
+  wrap.innerHTML = (c.labels||[]).map((l,i)=>
+    `<span class="label" style="background:${l.color}">${esc(l.name)}<button data-dl="${i}" aria-label="Remover etiqueta">✕</button></span>`
+  ).join('') || '<span style="font-size:12.5px;color:var(--ink-faint)">Sem etiquetas</span>';
+  wrap.querySelectorAll('[data-dl]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      c.labels.splice(+b.dataset.dl,1);
+      renderLabels(c); render(); markDirty();
+    });
+  });
+}
+document.getElementById('mLabelAdd').addEventListener('click', addLabel);
+document.getElementById('mLabelInput').addEventListener('keydown', e=>{ if(e.key==='Enter') addLabel(); });
+function addLabel(){
+  const c=currentCard(); if(!c) return;
+  const input = document.getElementById('mLabelInput');
+  const name = input.value.trim(); if(!name) return;
+  const color = LABEL_COLORS[(c.labels||[]).length % LABEL_COLORS.length];
+  c.labels = c.labels||[];
+  c.labels.push({name, color});
+  input.value='';
+  renderLabels(c); render(); markDirty();
+}
+
+function renderSubtasks(c){
+  const wrap = document.getElementById('mSubtasks');
+  const subs = c.subtasks||[];
+  wrap.innerHTML = subs.length ? '' : '<span style="font-size:12.5px;color:var(--ink-faint)">Nenhuma subtarefa ainda</span>';
+  subs.forEach(s=>{
+    const row = document.createElement('div');
+    row.className = 'subtask' + (s.done?' check':'');
+    row.innerHTML = `<input type="checkbox" ${s.done?'checked':''} aria-label="Concluir subtarefa">
+      <span>${esc(s.text)}</span>
+      <button class="del" aria-label="Excluir subtarefa">✕</button>`;
+    row.querySelector('input').addEventListener('change', e=>{
+      s.done = e.target.checked;
+      renderSubtasks(c); render(); markDirty();
+    });
+    row.querySelector('.del').addEventListener('click', ()=>{
+      c.subtasks = c.subtasks.filter(x=>x.id!==s.id);
+      renderSubtasks(c); render(); markDirty();
+    });
+    wrap.appendChild(row);
+  });
+}
+document.getElementById('mSubAdd').addEventListener('click', addSub);
+document.getElementById('mSubInput').addEventListener('keydown', e=>{ if(e.key==='Enter') addSub(); });
+function addSub(){
+  const c=currentCard(); if(!c) return;
+  const input = document.getElementById('mSubInput');
+  const text = input.value.trim(); if(!text) return;
+  c.subtasks = c.subtasks||[];
+  c.subtasks.push({id:uid(), text, done:false});
+  input.value='';
+  renderSubtasks(c); render(); markDirty();
+}
+
+function syncMoveButtons(c){
+  document.querySelectorAll('#mMove [data-move]').forEach(b=>{
+    b.classList.toggle('here', b.dataset.move===c.col);
+  });
+}
+document.querySelectorAll('#mMove [data-move]').forEach(b=>{
+  b.addEventListener('click', ()=>{ if(openCardId) moveCard(openCardId, b.dataset.move); });
+});
+
+document.getElementById('mDelete').addEventListener('click', ()=>{
+  const b = activeBoard();
+  const c = currentCard(); if(!c || !b) return;
+  if(confirm(`Excluir "${c.title}"? Essa ação não pode ser desfeita.`)){
+    if(pomo.cardId===c.id){ pomo.cardId=null; renderPomo(); }
+    b.cards = b.cards.filter(x=>x.id!==c.id);
+    closeModal(); render(); markDirty();
+  }
+});
+document.getElementById('mFocus').addEventListener('click', ()=>{
+  if(openCardId){ startFocus(openCardId); closeModal(); }
+});
+
+/* =============== Pomodoro =============== */
+const RING = 119.38;
+const pomoTime = document.getElementById('pomoTime');
+const pomoLabel = document.getElementById('pomoLabel');
+const pomoBar = document.getElementById('pomoBar');
+const pomoEmoji = document.getElementById('pomoEmoji');
+const pomoBox = document.getElementById('pomoBox');
+const pomoRing = document.getElementById('pomoRing');
+const pomoToggleIcon = document.getElementById('pomoToggleIcon');
+
+function fmt(sec){
+  const m = Math.floor(sec/60), s = sec%60;
+  return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+function modeTotal(){ return POMO[pomo.mode==='focus'?'focus':pomo.mode==='short'?'short':'long']; }
+
+function findCardAnyBoard(id){
+  for(const b of state.boards){
+    const c = b.cards.find(x=>x.id===id);
+    if(c) return c;
+  }
+  return null;
+}
+
+function renderPomo(){
+  pomoTime.textContent = fmt(pomo.remaining);
+  const total = modeTotal();
+  pomoBar.style.strokeDashoffset = RING * (1 - pomo.remaining/total);
+  pomoRing.classList.toggle('break', pomo.mode!=='focus');
+  pomoEmoji.textContent = pomo.mode==='focus' ? '🍅' : '☕';
+  pomoBox.classList.toggle('running', pomo.running);
+
+  if(pomo.mode!=='focus'){
+    pomoLabel.textContent = pomo.mode==='short' ? 'Pausa curta' : 'Pausa longa';
+  } else if(pomo.cardId){
+    const c = findCardAnyBoard(pomo.cardId);
+    pomoLabel.textContent = c ? '🎯 '+c.title : 'Foco';
+  } else {
+    pomoLabel.textContent = pomo.running ? 'Focando...' : 'Pronto para focar';
+  }
+  document.getElementById('pomoCount').textContent =
+    state.pomosToday ? `${state.pomosToday} 🍅 hoje` : '';
+
+  pomoToggleIcon.innerHTML = pomo.running
+    ? '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>'
+    : '<path d="M8 5v14l11-7z"/>';
+}
+
+function startFocus(cardId){
+  pomo.cardId = cardId;
+  pomo.mode = 'focus';
+  pomo.remaining = POMO.focus;
+  startTimer();
+  const c = findCardAnyBoard(cardId);
+  toast('Foco iniciado: '+(c?c.title:''));
+  render();
+}
+function startTimer(){
+  if(pomo.tick) clearInterval(pomo.tick);
+  pomo.running = true;
+  pomo.tick = setInterval(()=>{
+    pomo.remaining--;
+    if(pomo.remaining<=0) finishPhase();
+    renderPomo();
+  },1000);
+  renderPomo();
+}
+function pauseTimer(){
+  pomo.running = false;
+  if(pomo.tick){ clearInterval(pomo.tick); pomo.tick=null; }
+  renderPomo();
+}
+function finishPhase(){
+  pauseTimer();
+  beep();
+  if(pomo.mode==='focus'){
+    pomo.cycle++;
+    state.pomosToday++;
+    if(pomo.cardId){
+      const c = findCardAnyBoard(pomo.cardId);
+      if(c){ c.pomos = (c.pomos||0)+1; }
+    }
+    markDirty(); render();
+    const longBreak = pomo.cycle % 4 === 0;
+    pomo.mode = longBreak ? 'long' : 'short';
+    pomo.remaining = longBreak ? POMO.long : POMO.short;
+    toast(longBreak ? 'Pomodoro concluído! Pausa longa de 15 min ☕' : 'Pomodoro concluído! Pausa de 5 min ☕');
+    startTimer();
+  } else {
+    pomo.mode = 'focus';
+    pomo.remaining = POMO.focus;
+    toast('Pausa encerrada. Pronto para outro foco? 🍅');
+    renderPomo();
+  }
+}
+document.getElementById('pomoToggle').addEventListener('click', ()=>{
+  pomo.running ? pauseTimer() : startTimer();
+});
+document.getElementById('pomoReset').addEventListener('click', ()=>{
+  pauseTimer();
+  pomo.mode='focus'; pomo.remaining=POMO.focus; pomo.cardId=null;
+  renderPomo(); render();
+});
+
+function beep(){
+  try{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    [0,.2,.4].forEach((t,i)=>{
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = 740 + i*120;
+      g.gain.setValueAtTime(.001, ctx.currentTime+t);
+      g.gain.exponentialRampToValueAtTime(.18, ctx.currentTime+t+.02);
+      g.gain.exponentialRampToValueAtTime(.001, ctx.currentTime+t+.18);
+      o.start(ctx.currentTime+t); o.stop(ctx.currentTime+t+.2);
+    });
+  }catch(e){}
+}
+
+/* =============== Sincronização (Google Apps Script / Drive) =============== */
+const syncStatus = document.getElementById('syncStatus');
+const syncMsg = document.getElementById('syncMsg');
+let pushTimer = null;
+let pulling = false;
+
+function setSync(kind, text){
+  syncStatus.style.display = state.syncUrl ? '' : 'none';
+  syncStatus.className = 'save-status' + (kind ? ' '+kind : '');
+  syncStatus.textContent = text;
+}
+function syncUiRefresh(){
+  document.getElementById('syncUrlInput').value = state.syncUrl||'';
+  document.getElementById('syncTokenInput').value = state.syncToken||'';
+  setSync('', state.syncUrl ? 'Nuvem ✓' : '');
+}
+
+function cloudPayload(){
+  const p = Object.assign({}, state);
+  delete p.syncUrl; delete p.syncToken; /* credenciais ficam só no dispositivo */
+  return p;
+}
+
+function schedulePush(){
+  if(!state.syncUrl) return;
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(syncPush, 1500);
+}
+
+async function syncPush(){
+  if(!state.syncUrl) return;
+  setSync('saving','Nuvem ⟳');
+  try{
+    const res = await fetch(state.syncUrl, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({ token: state.syncToken||'', data: cloudPayload() })
+    });
+    const j = await res.json();
+    if(!j.ok) throw new Error(j.error||'erro');
+    setSync('','Nuvem ✓');
+  }catch(e){
+    setSync('error','Nuvem ✕');
+  }
+}
+
+async function syncPull(interactive){
+  if(!state.syncUrl || pulling) return;
+  pulling = true;
+  setSync('saving','Nuvem ⟳');
+  try{
+    const res = await fetch(state.syncUrl + '?token=' + encodeURIComponent(state.syncToken||''));
+    const j = await res.json();
+    if(!j.ok) throw new Error(j.error||'erro');
+    let remote = null;
+    try{ remote = JSON.parse(j.data); }catch(e){}
+    if(remote && Array.isArray(remote.boards) && remote.boards.length){
+      if((remote.lastModified||0) > (state.lastModified||0)){
+        const keep = { syncUrl: state.syncUrl, syncToken: state.syncToken };
+        state = Object.assign({}, state, remote, keep);
+        if(state.pomosDate !== todayStr()){ state.pomosToday = 0; state.pomosDate = todayStr(); }
+        if(!state.boards.find(b=>b.id===state.activeBoardId)) state.activeBoardId = state.boards[0].id;
+        applyTheme(); renderBoardSelect(); render(); renderPomo();
+        dirty = true; clearTimeout(saveTimer); save(); /* atualiza o cache local */
+        if(interactive) toast('Dados atualizados da nuvem ✓');
+      } else {
+        if(interactive) toast('Você já está com a versão mais recente ✓');
+        /* local é mais novo que a nuvem: envia */
+        if((state.lastModified||0) > (remote.lastModified||0)) schedulePush();
+      }
+    } else {
+      if(interactive) toast('Nuvem vazia — enviando seus dados atuais…');
+      schedulePush();
+    }
+    setSync('','Nuvem ✓');
+    if(interactive) syncMsg.textContent = 'Conectado ✓ — última verificação: agora';
+    pulling = false;
+    return true;
+  }catch(e){
+    setSync('error','Nuvem ✕');
+    if(interactive){
+      syncMsg.textContent = 'Falha na conexão. Confira a URL (/exec), a senha e se a implantação está como "Qualquer pessoa".';
+      toast('Não consegui conectar à nuvem.');
+    }
+    pulling = false;
+    return false;
+  }
+}
+
+document.getElementById('syncSaveBtn').addEventListener('click', async ()=>{
+  const url = document.getElementById('syncUrlInput').value.trim();
+  const tok = document.getElementById('syncTokenInput').value.trim();
+  if(!url || !url.startsWith('https://')){
+    syncMsg.textContent = 'Cole a URL completa do script (começa com https:// e termina em /exec).';
+    return;
+  }
+  state.syncUrl = url;
+  state.syncToken = tok;
+  markDirty();
+  syncMsg.textContent = 'Testando conexão…';
+  const ok = await syncPull(true);
+  if(ok) toast('Sincronização ativada! 🎉');
+});
+
+document.getElementById('syncNowBtn').addEventListener('click', ()=>{
+  if(!state.syncUrl){ syncMsg.textContent = 'Configure a URL e a senha primeiro.'; return; }
+  syncPull(true);
+});
+
+document.getElementById('syncOffBtn').addEventListener('click', ()=>{
+  if(!state.syncUrl) return;
+  if(confirm('Desativar a sincronização neste dispositivo? Seus dados locais e o arquivo no Drive não são apagados.')){
+    state.syncUrl=''; state.syncToken='';
+    markDirty(); syncUiRefresh();
+    syncMsg.textContent = 'Sincronização desativada neste dispositivo.';
+  }
+});
+
+/* =============== Backup: exportar / importar =============== */
+const backupOverlay = document.getElementById('backupOverlay');
+const exportArea = document.getElementById('exportArea');
+const importArea = document.getElementById('importArea');
+
+document.getElementById('backupOpen').addEventListener('click', ()=>{
+  exportArea.style.display='none';
+  importArea.value='';
+  syncUiRefresh();
+  syncMsg.textContent = state.syncUrl ? 'Sincronização ativa neste dispositivo.' : '';
+  backupOverlay.classList.add('open');
+});
+document.getElementById('backupClose').addEventListener('click', ()=> backupOverlay.classList.remove('open'));
+backupOverlay.addEventListener('click', e=>{ if(e.target===backupOverlay) backupOverlay.classList.remove('open'); });
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape' && backupOverlay.classList.contains('open')) backupOverlay.classList.remove('open');
+});
+
+function exportPayload(){
+  return JSON.stringify({
+    app:'kanban-todo-doing-done',
+    version:2,
+    exportedAt:new Date().toISOString(),
+    boards:state.boards,
+    activeBoardId:state.activeBoardId,
+    theme:state.theme,
+    pomosToday:state.pomosToday,
+    pomosDate:state.pomosDate,
+  }, null, 2);
+}
+
+document.getElementById('exportFile').addEventListener('click', ()=>{
+  const json = exportPayload();
+  try{
+    const blob = new Blob([json], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'meus-quadros-'+todayStr()+'.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 2000);
+    toast('Backup baixado! Guarde o arquivo .json');
+  }catch(e){
+    /* ambiente bloqueia download: mostra o código para copiar */
+    exportArea.value = json;
+    exportArea.style.display='block';
+    exportArea.select();
+    toast('Download bloqueado aqui — copie o código exibido.');
+  }
+});
+
+document.getElementById('exportCopy').addEventListener('click', async ()=>{
+  const json = exportPayload();
+  exportArea.value = json;
+  exportArea.style.display='block';
+  exportArea.select();
+  try{
+    await navigator.clipboard.writeText(json);
+    toast('Código copiado! Cole no outro dispositivo.');
+  }catch(e){
+    toast('Selecione o texto acima e copie manualmente (Ctrl/Cmd+C).');
+  }
+});
+
+function validateBackup(data){
+  if(!data || typeof data!=='object') return null;
+  /* formato atual (multi-quadros) */
+  if(Array.isArray(data.boards)){
+    const boards = data.boards
+      .filter(b=>b && typeof b==='object' && Array.isArray(b.cards))
+      .map(b=>({ id:String(b.id||uid()), name:String(b.name||'Quadro'), cards:sanitizeCards(b.cards) }));
+    if(!boards.length) return null;
+    return {boards, theme:data.theme==='dark'?'dark':'light',
+            activeBoardId:data.activeBoardId,
+            pomosToday:Number(data.pomosToday)||0, pomosDate:data.pomosDate||todayStr()};
+  }
+  /* formato antigo (quadro único) */
+  if(Array.isArray(data.cards)){
+    return {boards:[{id:uid(), name:'Meu Quadro', cards:sanitizeCards(data.cards)}],
+            theme:data.theme==='dark'?'dark':'light', activeBoardId:null,
+            pomosToday:0, pomosDate:todayStr()};
+  }
+  return null;
+}
+function sanitizeCards(arr){
+  const cols = ['todo','doing','done'];
+  const pris = ['urgente','alta','normal','baixa'];
+  return arr.filter(c=>c && typeof c==='object' && c.title).map(c=>({
+    id:String(c.id||uid()),
+    title:String(c.title).slice(0,300),
+    desc:String(c.desc||'').slice(0,5000),
+    col:cols.includes(c.col)?c.col:'todo',
+    priority:pris.includes(c.priority)?c.priority:'normal',
+    due:typeof c.due==='string'?c.due.slice(0,10):'',
+    labels:Array.isArray(c.labels)?c.labels.filter(l=>l&&l.name).map((l,i)=>({
+      name:String(l.name).slice(0,20),
+      color:/^#[0-9A-Fa-f]{6}$/.test(l.color||'')?l.color:LABEL_COLORS[i%LABEL_COLORS.length]
+    })):[],
+    subtasks:Array.isArray(c.subtasks)?c.subtasks.filter(s=>s&&s.text).map(s=>({
+      id:String(s.id||uid()), text:String(s.text).slice(0,300), done:!!s.done
+    })):[],
+    pomos:Number(c.pomos)||0,
+    createdAt:Number(c.createdAt)||Date.now(),
+  }));
+}
+
+function doImport(rawText){
+  let data;
+  try{ data = JSON.parse(rawText); }
+  catch(e){ toast('Código inválido: não é um JSON válido.'); return; }
+  const parsed = validateBackup(data);
+  if(!parsed){ toast('Este arquivo/código não parece ser um backup deste quadro.'); return; }
+
+  const nBoards = parsed.boards.length;
+  const nCards = parsed.boards.reduce((s,b)=>s+b.cards.length,0);
+  const curCards = state.boards.reduce((s,b)=>s+b.cards.length,0);
+  const warn = curCards
+    ? `Importar ${nBoards} quadro(s) com ${nCards} tarefa(s)?\n\nIsso SUBSTITUI seus ${state.boards.length} quadro(s) atuais (${curCards} tarefa(s)) neste dispositivo. Essa ação não pode ser desfeita.`
+    : `Importar ${nBoards} quadro(s) com ${nCards} tarefa(s)?`;
+  if(!confirm(warn)) return;
+
+  state.boards = parsed.boards;
+  state.activeBoardId = parsed.boards.find(b=>b.id===parsed.activeBoardId) ? parsed.activeBoardId : parsed.boards[0].id;
+  state.theme = parsed.theme;
+  state.pomosToday = parsed.pomosDate===todayStr() ? parsed.pomosToday : 0;
+  state.pomosDate = todayStr();
+
+  applyTheme(); renderBoardSelect(); render(); renderPomo(); markDirty();
+  backupOverlay.classList.remove('open');
+  toast(`Importado: ${nBoards} quadro(s), ${nCards} tarefa(s) ✓`);
+}
+
+document.getElementById('importFileBtn').addEventListener('click', ()=>{
+  document.getElementById('importFileInput').click();
+});
+document.getElementById('importFileInput').addEventListener('change', e=>{
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=> doImport(reader.result);
+  reader.onerror = ()=> toast('Não consegui ler o arquivo.');
+  reader.readAsText(file);
+  e.target.value='';
+});
+document.getElementById('importPasteBtn').addEventListener('click', ()=>{
+  const txt = importArea.value.trim();
+  if(!txt){ toast('Cole o código do backup no campo acima.'); return; }
+  doImport(txt);
+});
+
+/* =============== Toast =============== */
+let toastTimer=null;
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> t.classList.remove('show'), 3200);
+}
+
+load();
+</script>
+</body>
+</html>
