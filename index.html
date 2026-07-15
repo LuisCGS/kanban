@@ -75,19 +75,38 @@
 
   /* ---------- Header ---------- */
   header{
-    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
-    padding:12px 20px;
+    display:flex;flex-direction:column;gap:9px;
+    padding:10px 20px 12px;
     background:var(--surface);
     border-bottom:1px solid var(--line);
     position:sticky;top:0;z-index:40;
   }
+  .hrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .hspacer{flex:1}
+  .crumb-sep{color:var(--ink-faint);font-size:16px;font-weight:700;user-select:none}
+  .status-pills{display:flex;gap:6px;align-items:center}
   .picker-group{
-    display:flex;align-items:center;gap:5px;flex-wrap:wrap;
+    display:flex;align-items:center;gap:4px;
+    flex-wrap:nowrap;position:relative;
     background:var(--surface-2);
     border:1px solid var(--line);
     border-radius:12px;
     padding:4px 6px;
+    max-width:100%;
   }
+  .head-menu{
+    position:absolute;top:calc(100% + 6px);left:6px;right:auto;z-index:70;
+    background:var(--surface);border:1px solid var(--line);
+    border-radius:11px;box-shadow:var(--shadow-lift);
+    min-width:210px;overflow:hidden;padding:4px;
+  }
+  .head-menu button{
+    display:block;width:100%;text-align:left;
+    padding:9px 12px;font-size:13px;border-radius:8px;
+  }
+  .head-menu button:hover{background:var(--surface-2)}
+  .head-menu button.danger{color:var(--urgent)}
+  .head-menu button.danger:hover{background:var(--danger-soft)}
   .picker-label{
     font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
     color:var(--ink-faint);padding:0 2px 0 6px;
@@ -394,52 +413,66 @@
     .board{flex-direction:column;overflow-x:visible;max-width:560px}
     .col{flex:0 0 auto;max-width:none;width:100%;max-height:none}
     .add-col{flex:0 0 auto;width:100%}
-    header{padding:12px 14px;gap:10px}
+    header{padding:10px 14px;gap:8px}
+    .crumb-sep{display:none}
     .picker-group{width:100%;justify-content:flex-start}
     .picker-select{max-width:none;flex:1}
+    .search{max-width:none}
     .pomo{margin-left:0;width:100%;justify-content:space-between}
     main{padding:14px 14px 28px}
   }
+
+  /* ---------- Reordenar colunas ---------- */
+  .col-head{cursor:grab}
+  .col-head:active{cursor:grabbing}
+  .col.col-dragging{opacity:.5;border-style:dashed}
+  .col.col-target{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+  .col-menu button:disabled{opacity:.35;cursor:default}
+  .col-menu button:disabled:hover{background:none}
 </style>
 </head>
 <body>
 
 <header>
-  <div class="picker-group" aria-label="Workspace">
-    <span class="picker-label">🗂 Workspace</span>
-    <select class="picker-select" id="wsSelect" aria-label="Escolher workspace"></select>
-    <button class="board-tool" id="wsNew" title="Novo workspace" aria-label="Criar novo workspace">＋</button>
-    <button class="board-tool" id="wsRename" title="Renomear workspace" aria-label="Renomear workspace">✏️</button>
-    <button class="board-tool danger" id="wsDelete" title="Excluir workspace" aria-label="Excluir workspace">🗑</button>
+  <div class="hrow">
+    <div class="picker-group" aria-label="Workspace">
+      <span class="picker-label">🗂 Workspace</span>
+      <select class="picker-select" id="wsSelect" aria-label="Escolher workspace"></select>
+      <button class="board-tool" id="wsMenuBtn" title="Opções do workspace" aria-label="Opções do workspace: criar, renomear ou excluir" aria-haspopup="true">⋯</button>
+    </div>
+
+    <span class="crumb-sep" aria-hidden="true">›</span>
+
+    <div class="picker-group" aria-label="Quadro">
+      <span class="picker-label">📋 Quadro</span>
+      <select class="picker-select" id="boardSelect" aria-label="Escolher quadro"></select>
+      <button class="board-tool" id="boardMenuBtn" title="Opções do quadro" aria-label="Opções do quadro: criar, renomear ou excluir" aria-haspopup="true">⋯</button>
+    </div>
+
+    <div class="hspacer"></div>
+
+    <div class="status-pills">
+      <span class="save-status" id="saveStatus">Salvo ✓</span>
+      <span class="save-status" id="syncStatus" style="display:none">Nuvem ✓</span>
+    </div>
+    <button class="single-tool" id="backupOpen" title="Backup e sincronização" aria-label="Backup e sincronização">💾</button>
+    <button class="theme-btn" id="themeToggle" aria-label="Alternar tema claro/escuro" title="Tema claro/escuro">🌙</button>
   </div>
 
-  <div class="picker-group" aria-label="Quadro">
-    <span class="picker-label">📋 Quadro</span>
-    <select class="picker-select" id="boardSelect" aria-label="Escolher quadro"></select>
-    <button class="board-tool" id="boardNew" title="Novo quadro" aria-label="Criar novo quadro">＋</button>
-    <button class="board-tool" id="boardRename" title="Renomear quadro" aria-label="Renomear quadro">✏️</button>
-    <button class="board-tool danger" id="boardDelete" title="Excluir quadro" aria-label="Excluir quadro">🗑</button>
-  </div>
+  <div class="hrow">
+    <div class="search" role="search">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="searchInput" type="text" placeholder="Buscar tarefas..." aria-label="Buscar tarefas">
+    </div>
 
-  <button class="single-tool" id="backupOpen" title="Backup e sincronização" aria-label="Backup e sincronização">💾</button>
-  <span class="save-status" id="saveStatus">Salvo ✓</span>
-  <span class="save-status" id="syncStatus" style="display:none">Nuvem ✓</span>
+    <div class="filters" id="priorityFilters" aria-label="Filtrar por prioridade">
+      <button class="chip" data-pf="urgente">Urgente</button>
+      <button class="chip" data-pf="alta">Alta</button>
+      <button class="chip" data-pf="normal">Normal</button>
+      <button class="chip" data-pf="baixa">Baixa</button>
+    </div>
 
-  <div class="search" role="search">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-    <input id="searchInput" type="text" placeholder="Buscar tarefas..." aria-label="Buscar tarefas">
-  </div>
-
-  <div class="filters" id="priorityFilters" aria-label="Filtrar por prioridade">
-    <button class="chip" data-pf="urgente">Urgente</button>
-    <button class="chip" data-pf="alta">Alta</button>
-    <button class="chip" data-pf="normal">Normal</button>
-    <button class="chip" data-pf="baixa">Baixa</button>
-  </div>
-
-  <button class="theme-btn" id="themeToggle" aria-label="Alternar tema claro/escuro" title="Tema claro/escuro">🌙</button>
-
-  <div class="pomo" id="pomoBox">
+    <div class="pomo" id="pomoBox">
     <div class="pomo-ring" id="pomoRing">
       <svg width="46" height="46" viewBox="0 0 46 46">
         <circle class="track" cx="23" cy="23" r="19"></circle>
@@ -461,6 +494,7 @@
       </button>
     </div>
     <span class="pomo-count" id="pomoCount"></span>
+  </div>
   </div>
 </header>
 
@@ -828,8 +862,34 @@ boardSelect.addEventListener('change', ()=>{
   render(); markDirty();
 });
 
+/* --- menus dos seletores (⋯) --- */
+let openHeadMenu = null;
+function closeHeadMenu(){
+  if(openHeadMenu){ openHeadMenu.remove(); openHeadMenu=null; }
+}
+document.addEventListener('click', e=>{
+  if(openHeadMenu && !e.target.closest('.head-menu') && !e.target.closest('#wsMenuBtn') && !e.target.closest('#boardMenuBtn')) closeHeadMenu();
+});
+function toggleHeadMenu(btn, items){
+  if(openHeadMenu && openHeadMenu.dataset.for===btn.id){ closeHeadMenu(); return; }
+  closeHeadMenu(); closeColMenu();
+  const menu = document.createElement('div');
+  menu.className = 'head-menu';
+  menu.dataset.for = btn.id;
+  menu.setAttribute('role','menu');
+  items.forEach(item=>{
+    const b = document.createElement('button');
+    b.textContent = item.label;
+    if(item.danger) b.className = 'danger';
+    b.addEventListener('click', ()=>{ closeHeadMenu(); item.fn(); });
+    menu.appendChild(b);
+  });
+  btn.closest('.picker-group').appendChild(menu);
+  openHeadMenu = menu;
+}
+
 /* --- workspaces --- */
-document.getElementById('wsNew').addEventListener('click', ()=>{
+function wsNewFn(){
   const name = prompt('Nome do novo workspace (ex.: Trabalho, Vida Pessoal):', '');
   if(name===null) return;
   const ws = newWorkspace(name.trim()||'Novo workspace');
@@ -837,15 +897,15 @@ document.getElementById('wsNew').addEventListener('click', ()=>{
   state.activeWorkspaceId = ws.id;
   renderPickers(); render(); markDirty();
   toast('Workspace "'+ws.name+'" criado');
-});
-document.getElementById('wsRename').addEventListener('click', ()=>{
+}
+function wsRenameFn(){
   const w = activeWorkspace(); if(!w) return;
   const name = prompt('Renomear workspace:', w.name);
   if(name===null) return;
   w.name = (name.trim()||w.name).slice(0,40);
   renderPickers(); markDirty();
-});
-document.getElementById('wsDelete').addEventListener('click', ()=>{
+}
+function wsDeleteFn(){
   const w = activeWorkspace(); if(!w) return;
   if(state.workspaces.length===1){
     toast('Este é seu único workspace — crie outro antes de excluir este.');
@@ -859,10 +919,17 @@ document.getElementById('wsDelete').addEventListener('click', ()=>{
     renderPickers(); render(); markDirty();
     toast('Workspace excluído');
   }
+}
+document.getElementById('wsMenuBtn').addEventListener('click', e=>{
+  toggleHeadMenu(e.currentTarget, [
+    {label:'➕ Novo workspace', fn:wsNewFn},
+    {label:'✏️ Renomear "'+ (activeWorkspace()?activeWorkspace().name:'') +'"', fn:wsRenameFn},
+    {label:'🗑 Excluir workspace', fn:wsDeleteFn, danger:true},
+  ]);
 });
 
 /* --- quadros --- */
-document.getElementById('boardNew').addEventListener('click', ()=>{
+function boardNewFn(){
   const w = activeWorkspace(); if(!w) return;
   const name = prompt('Nome do novo quadro:', 'Novo quadro');
   if(name===null) return;
@@ -871,15 +938,15 @@ document.getElementById('boardNew').addEventListener('click', ()=>{
   w.activeBoardId = b.id;
   renderPickers(); render(); markDirty();
   toast('Quadro "'+b.name+'" criado');
-});
-document.getElementById('boardRename').addEventListener('click', ()=>{
+}
+function boardRenameFn(){
   const b = activeBoard(); if(!b) return;
   const name = prompt('Renomear quadro:', b.name);
   if(name===null) return;
   b.name = (name.trim()||b.name).slice(0,40);
   renderPickers(); markDirty();
-});
-document.getElementById('boardDelete').addEventListener('click', ()=>{
+}
+function boardDeleteFn(){
   const w = activeWorkspace();
   const b = activeBoard(); if(!w || !b) return;
   if(w.boards.length===1){
@@ -896,6 +963,13 @@ document.getElementById('boardDelete').addEventListener('click', ()=>{
     renderPickers(); render(); markDirty();
     toast('Quadro excluído');
   }
+}
+document.getElementById('boardMenuBtn').addEventListener('click', e=>{
+  toggleHeadMenu(e.currentTarget, [
+    {label:'➕ Novo quadro', fn:boardNewFn},
+    {label:'✏️ Renomear "'+ (activeBoard()?activeBoard().name:'') +'"', fn:boardRenameFn},
+    {label:'🗑 Excluir quadro', fn:boardDeleteFn, danger:true},
+  ]);
 });
 
 /* =============== Pomodoro (estado) =============== */
@@ -942,13 +1016,20 @@ function render(){
 
     const head = document.createElement('div');
     head.className = 'col-head';
+    head.draggable = true;
     head.innerHTML = `
       <span class="col-dot" style="background:${dotColor}"></span>
-      <h2 title="${esc(colDef.name)}">${esc(colDef.name)}</h2>
+      <h2 title="${esc(colDef.name)} (arraste para reordenar)">${esc(colDef.name)}</h2>
       <span class="col-count">${colCards.length}</span>
       ${colDef.done ? '<button class="col-clear" data-clear="'+colDef.id+'">Limpar</button>' : ''}
       <button class="col-menu-btn" data-menu="${colDef.id}" aria-label="Opções da coluna" title="Opções da coluna">⋯</button>
     `;
+    head.addEventListener('dragstart', e=>{
+      e.dataTransfer.setData('text/plain', 'col:'+colDef.id);
+      e.dataTransfer.effectAllowed='move';
+      section.classList.add('col-dragging');
+    });
+    head.addEventListener('dragend', ()=> section.classList.remove('col-dragging'));
     section.appendChild(head);
 
     const cardsWrap = document.createElement('div');
@@ -974,8 +1055,12 @@ function render(){
     section.addEventListener('dragleave', e=>{ if(!section.contains(e.relatedTarget)) section.classList.remove('dragover'); });
     section.addEventListener('drop', e=>{
       e.preventDefault(); section.classList.remove('dragover');
-      const id = e.dataTransfer.getData('text/plain');
-      moveCard(id, colDef.id);
+      const raw = e.dataTransfer.getData('text/plain');
+      if(raw.startsWith('col:')){
+        reorderColumn(raw.slice(4), colDef.id);
+      } else {
+        moveCard(raw, colDef.id);
+      }
     });
 
     boardEl.appendChild(section);
@@ -1035,6 +1120,25 @@ function clearColumn(colId){
   }
 }
 
+function reorderColumn(srcId, targetId){
+  const b = activeBoard(); if(!b || srcId===targetId) return;
+  const srcIdx = b.columns.findIndex(c=>c.id===srcId);
+  const tgtIdx = b.columns.findIndex(c=>c.id===targetId);
+  if(srcIdx<0 || tgtIdx<0) return;
+  const [col] = b.columns.splice(srcIdx,1);
+  b.columns.splice(tgtIdx,0,col);
+  render(); markDirty();
+}
+function shiftColumn(colId, delta){
+  const b = activeBoard(); if(!b) return;
+  const idx = b.columns.findIndex(c=>c.id===colId);
+  const to = idx + delta;
+  if(idx<0 || to<0 || to>=b.columns.length) return;
+  const [col] = b.columns.splice(idx,1);
+  b.columns.splice(to,0,col);
+  render(); markDirty();
+}
+
 /* ---- menu da coluna ---- */
 function closeColMenu(){
   if(openColMenu){ openColMenu.remove(); openColMenu=null; }
@@ -1048,10 +1152,14 @@ function toggleColMenu(btn){
   if(openColMenu && openColMenu.dataset.for===colId){ closeColMenu(); return; }
   closeColMenu();
   const colDef = colById(colId); if(!colDef) return;
+  const idx = columns().findIndex(c=>c.id===colId);
+  const last = columns().length-1;
   const menu = document.createElement('div');
   menu.className = 'col-menu';
   menu.dataset.for = colId;
   menu.innerHTML = `
+    <button data-act="left" ${idx===0?'disabled':''}>◀ Mover para a esquerda</button>
+    <button data-act="right" ${idx===last?'disabled':''}>▶ Mover para a direita</button>
     <button data-act="rename">✏️ Renomear coluna</button>
     <button data-act="toggleDone">${colDef.done ? '⭕ Deixar de ser conclusão' : '✅ Marcar como conclusão'}</button>
     <button data-act="delete" class="danger">🗑 Excluir coluna</button>
@@ -1070,6 +1178,9 @@ function handleColAction(colId, act){
   const colDef = colById(colId);
   if(!b || !colDef) return;
   closeColMenu();
+
+  if(act==='left'){ shiftColumn(colId,-1); return; }
+  if(act==='right'){ shiftColumn(colId, 1); return; }
 
   if(act==='rename'){
     const name = prompt('Renomear coluna:', colDef.name);
